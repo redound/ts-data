@@ -1,0 +1,47 @@
+{
+  "version": "1.8.9",
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "noImplicitAny": false,
+    "removeComments": true,
+    "noLib": false,
+    "preserveConstEnums": true,
+    "declaration": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "outDir": "./lib"
+  },
+  "filesGlob": [
+    "./**/*.ts",
+    "!./node_modules/**/*.ts"
+  ],
+  "files": [
+    "./src/DataSources/ApiDataSource.ts",
+    "./src/DataSources/MemoryDataSource.ts",
+    "./src/Graph/Graph.ts",
+    "./src/Graph/Reference.ts",
+    "./src/Http/HttpMethods.ts",
+    "./src/Http/RequestOptions.ts",
+    "./src/Http/Service.ts",
+    "./src/Model/ActiveModel.ts",
+    "./src/Query/Condition.ts",
+    "./src/Query/QueryExecutorInterface.ts",
+    "./src/Query/Sorter.ts",
+    "./src/RequestHandlerPlugins/LimitRequestHandlerPlugin.ts",
+    "./src/RequestHandlerPlugins/OffsetRequestHandlerPlugin.ts",
+    "./src/Serializers/DefaultSerializer.ts",
+    "./src/Serializers/JsonApiSerializer.ts",
+    "./src/ApiResourceInterface.ts",
+    "./src/ApiService.ts",
+    "./src/DataService.ts",
+    "./src/DataSourceInterface.ts",
+    "./src/DataSourceResponseInterface.ts",
+    "./src/RequestHandler.ts",
+    "./src/Resource.ts",
+    "./src/ResourceDelegate.ts",
+    "./src/ResourceInterface.ts",
+    "./src/SerializerInterface.ts",
+    "./src/Transformer.ts",
+    "./typings/main.d.ts"
+  ]
+}
