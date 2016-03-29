@@ -1,5 +1,5 @@
 {
-  "name": "ts-core",
+  "name": "ts-data",
   "version": false,
   "main": "./lib/ts-data.d.ts",
   "dependencies": {
