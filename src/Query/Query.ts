@@ -1,5 +1,5 @@
 import Condition from "./Condition";
-import {Sorter} from "./Sorter";
+import Sorter from "./Sorter";
 import {QueryExecutorInterface} from "./QueryExecutorInterface";
 import {DataServiceResponseInterface} from "../DataService";
 

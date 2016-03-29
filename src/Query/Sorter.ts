@@ -3,7 +3,7 @@ export enum SortDirections {
     DESCENDING
 }
 
-export class Sorter {
+export default class Sorter {
 
     public field:string;
     public direction:SortDirections;
