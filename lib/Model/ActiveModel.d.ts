@@ -22,6 +22,6 @@ export default class ActiveModel extends Model {
     isActivated(): boolean;
     isCreated(): boolean;
     isRemoved(): boolean;
-    isDirty(): boolean;
+    isDirty(field?: string): boolean;
     getResourceIdentifier(): string;
 }

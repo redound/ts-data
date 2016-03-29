@@ -117,8 +117,16 @@ export default class ActiveModel extends Model {
         return this._flags.contains(ActiveModelFlag.REMOVED);
     }
 
-    public isDirty():boolean {
-        return !this._savedData || !this.equals(this._savedData);
+    public isDirty(field?: string):boolean {
+        if (!this._savedData) {
+            return false;
+        }
+
+        if (field) {
+            return this[field] != this._savedData[field];
+        }
+
+        return !this.equals(this._savedData);
     }
 
     // public isValid(field?:string) {
