@@ -2,8 +2,8 @@
   "name": "ts-data",
   "version": "0.1.0",
   "description": "TypeScript Data Structure Library",
-  "main": "lib/index.js",
-  "typings": "lib/index",
+  "main": "lib/ts-data.js",
+  "typings": "lib/ts-data.d.ts",
   "scripts": {
     "test": "",
     "postinstall": "typings install",

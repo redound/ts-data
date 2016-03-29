@@ -1,6 +1,9 @@
 {
   "version": false,
-  "dependencies": {},
+  "main": "./lib/ts-data.d.ts",
+  "dependencies": {
+    "ts-core": "github:redound/ts-core#dev-package"
+  },
   "ambientDependencies": {
     "angular": "registry:dt/angular#1.5.0+20160320081937",
     "jquery": "registry:dt/jquery#1.10.0+20160316155526",
