@@ -129,6 +129,10 @@ export default class ActiveModel extends Model {
         return !this.equals(this._savedData);
     }
 
+    public isValid() {
+        return true;
+    }
+
     // public isValid(field?:string) {
     //
     //     if (this['validation']) {
