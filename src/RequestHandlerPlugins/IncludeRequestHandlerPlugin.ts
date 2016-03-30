@@ -3,7 +3,7 @@ import RequestOptions from "../Http/RequestOptions";
 import Query from "../Query/Query";
 import {RequestHandlerFeatures} from "../RequestHandler";
 
-export class IncludeRequestHandlerPlugin implements RequestHandlerPluginInterface {
+export default class IncludeRequestHandlerPlugin implements RequestHandlerPluginInterface {
 
     public execute(requestOptions:RequestOptions, query:Query<any>):RequestHandlerFeatures[] {
 

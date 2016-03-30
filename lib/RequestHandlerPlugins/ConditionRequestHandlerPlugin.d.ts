@@ -3,7 +3,7 @@ import RequestOptions from "../Http/RequestOptions";
 import { RequestHandlerPluginInterface } from "../RequestHandlerPluginInterface";
 import { RequestHandlerFeatures } from "../RequestHandler";
 import Query from "../Query/Query";
-export declare class ConditionRequestHandlerPlugin implements RequestHandlerPluginInterface {
+export default class ConditionRequestHandlerPlugin implements RequestHandlerPluginInterface {
     queryOperators: {
         "e": ConditionOperator;
         "gt": ConditionOperator;

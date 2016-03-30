@@ -4,7 +4,7 @@ import Query from "../Query/Query";
 import {RequestHandlerFeatures} from "../RequestHandler";
 import {SortDirections} from "../Query/Sorter";
 
-export class SortRequestHandlerPlugin implements RequestHandlerPluginInterface {
+export default class SortRequestHandlerPlugin implements RequestHandlerPluginInterface {
 
     public execute(requestOptions:RequestOptions, query:Query<any>):RequestHandlerFeatures[] {
 

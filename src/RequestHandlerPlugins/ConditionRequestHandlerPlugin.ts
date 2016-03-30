@@ -4,7 +4,7 @@ import {RequestHandlerPluginInterface} from "../RequestHandlerPluginInterface";
 import {RequestHandlerFeatures} from "../RequestHandler";
 import Query from "../Query/Query";
 
-export class ConditionRequestHandlerPlugin implements RequestHandlerPluginInterface {
+export default class ConditionRequestHandlerPlugin implements RequestHandlerPluginInterface {
 
     public queryOperators = {
         "e": ConditionOperator.IS_EQUAL,
