@@ -16,7 +16,7 @@ export enum RequestHandlerFeatures {
     INCLUDES
 }
 
-export class RequestHandler implements QueryExecutorInterface {
+export default class RequestHandler implements QueryExecutorInterface {
 
     public _apiService:ApiService;
     public _resourceName:string;

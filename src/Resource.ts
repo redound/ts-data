@@ -1,6 +1,6 @@
 import Collection from "ts-core/lib/Data/Collection";
 import {ModelInterface} from "ts-core/lib/Data/Model";
-import {RequestHandler} from "./RequestHandler";
+import RequestHandler from "./RequestHandler";
 import {TransformerInterface} from "./Transformer";
 
 export default class Resource {

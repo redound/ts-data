@@ -14,7 +14,7 @@ export declare enum RequestHandlerFeatures {
     SORTERS = 4,
     INCLUDES = 5,
 }
-export declare class RequestHandler implements QueryExecutorInterface {
+export default class RequestHandler implements QueryExecutorInterface {
     protected $q: ng.IQService;
     protected httpService: HttpService;
     _apiService: ApiService;

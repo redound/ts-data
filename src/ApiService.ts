@@ -2,7 +2,7 @@ import Dictionary from "ts-core/lib/Data/Dictionary";
 import {QueryExecutorInterface} from "./Query/QueryExecutorInterface";
 import {ApiResourceInterface} from "./ApiResourceInterface";
 import Exception from "ts-core/lib/Exceptions/Exception";
-import {RequestHandler} from "./RequestHandler";
+import RequestHandler from "./RequestHandler";
 import Query from "./Query/Query";
 
 export default class ApiService implements QueryExecutorInterface {

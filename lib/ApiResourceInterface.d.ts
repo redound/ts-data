@@ -1,4 +1,4 @@
-import { RequestHandler } from "./RequestHandler";
+import RequestHandler from "./RequestHandler";
 import Transformer from "./Transformer";
 export interface ApiResourceInterface {
     getPrefix(): string;
