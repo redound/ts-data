@@ -5,6 +5,7 @@ import Dictionary from "ts-core/lib/Data/Dictionary";
 import Reference from "../Graph/Reference";
 import Graph from "../Graph/Graph";
 import Exception from "ts-core/lib/Exceptions/Exception";
+import * as _ from "underscore";
 
 export default class JsonApiSerializer implements SerializerInterface {
 

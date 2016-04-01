@@ -1,4 +1,6 @@
 import Reference from "./Reference";
+import * as _ from "underscore";
+
 
 export default class Graph {
 

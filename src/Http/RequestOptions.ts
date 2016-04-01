@@ -1,4 +1,5 @@
 import {default as HttpMethods} from "./HttpMethods";
+import * as _ from "underscore";
 
 export default class RequestOptions {
 

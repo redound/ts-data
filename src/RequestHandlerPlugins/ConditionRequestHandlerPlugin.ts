@@ -3,6 +3,7 @@ import RequestOptions from "../Http/RequestOptions";
 import {RequestHandlerPluginInterface} from "../RequestHandlerPluginInterface";
 import {RequestHandlerFeatures} from "../RequestHandler";
 import Query from "../Query/Query";
+import * as _ from "underscore";
 
 export default class ConditionRequestHandlerPlugin implements RequestHandlerPluginInterface {
 

@@ -1,5 +1,6 @@
 import BaseObject from "ts-core/lib/BaseObject";
 import Text from "ts-core/lib/Utils/Text";
+import * as _ from "underscore";
 
 export interface TransformerInterface {
     new():Transformer;

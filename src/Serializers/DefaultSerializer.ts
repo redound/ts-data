@@ -6,6 +6,7 @@ import Collection from "ts-core/lib/Data/Collection";
 import Exception from "ts-core/lib/Exceptions/Exception";
 import Reference from "../Graph/Reference";
 import Graph from "../Graph/Graph";
+import * as _ from "underscore";
 
 export default class DefaultSerializer implements SerializerInterface {
 

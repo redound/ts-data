@@ -5,6 +5,7 @@ import Exception from "ts-core/lib/Exceptions/Exception";
 import {MessageInterface} from "ts-validate/lib/MessageInterface";
 import Message from "ts-validate/lib/Message";
 import Validation from "ts-validate/lib/Validation";
+import * as _ from "underscore";
 
 export enum ActiveModelFlag {
     ACTIVATED,

@@ -11,6 +11,7 @@ import Exception from "ts-core/lib/Exceptions/Exception";
 import Query from "./Query/Query";
 import ModelList from "ts-core/lib/Data/ModelList";
 import ActiveModel from "./Model/ActiveModel";
+import * as _ from "underscore";
 
 export interface DataSourceExecutionResultInterface {
     response:DataSourceResponseInterface,

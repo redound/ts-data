@@ -8,6 +8,7 @@ import Dictionary from "ts-core/lib/Data/Dictionary";
 import Logger from "ts-core/lib/Logger/Logger";
 import {DataSourceResponseInterface} from "../DataSourceResponseInterface";
 import Collection from "ts-core/lib/Data/Collection";
+import * as _ from "underscore";
 
 export interface QueryResultInterface {
     query:Query<any>,

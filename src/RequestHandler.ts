@@ -6,6 +6,7 @@ import {default as HttpService} from "./Http/Service";
 import RequestOptions from "./Http/RequestOptions";
 import Query from "./Query/Query";
 import {ApiResourceInterface} from "./ApiResourceInterface";
+import * as _ from "underscore";
 
 export enum RequestHandlerFeatures {
     OFFSET,

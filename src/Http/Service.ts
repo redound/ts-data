@@ -1,4 +1,5 @@
 import RequestOptions from "./RequestOptions";
+import * as _ from "underscore";
 
 export default class Service {
 
