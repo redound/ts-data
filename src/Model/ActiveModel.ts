@@ -2,6 +2,9 @@ import Model from "ts-core/lib/Data/Model";
 import Collection from "ts-core/lib/Data/Collection";
 import DataService, {DataServiceResponseInterface} from "../DataService";
 import Exception from "ts-core/lib/Exceptions/Exception";
+import {MessageInterface} from "ts-validate/lib/MessageInterface";
+import Message from "ts-validate/lib/Message";
+import Validation from "ts-validate/lib/Validation";
 
 export enum ActiveModelFlag {
     ACTIVATED,
@@ -20,26 +23,26 @@ export default class ActiveModel extends Model {
     protected _savedData:any;
 
     // TODO Update TSValidate
-    // protected _errorMessages:Collection<TSValidate.MessageInterface> = new TSCore.Data.Collection<TSValidate.MessageInterface>();
-    //
-    // protected validate(validation:TSValidate.Validation):TSCore.Data.Collection<TSValidate.MessageInterface> {
-    //
-    //     return this._errorMessages = validation.validate(null, this);
-    // }
-    //
-    // public validationHasFailed():boolean {
-    //
-    //     if (_.isArray(this._errorMessages)) {
-    //         return this._errorMessages.count() > 0;
-    //     }
-    //
-    //     return false;
-    // }
-    //
-    // public getMessages() {
-    //
-    //     return this._errorMessages;
-    // }
+    protected _errorMessages:Collection<MessageInterface> = new Collection<MessageInterface>();
+
+    protected validate(validation:Validation):Collection<MessageInterface> {
+
+        return this._errorMessages = validation.validate(null, this);
+    }
+
+    public validationHasFailed():boolean {
+
+        if (_.isArray(this._errorMessages)) {
+            return this._errorMessages.count() > 0;
+        }
+
+        return false;
+    }
+
+    public getMessages() {
+
+        return this._errorMessages;
+    }
 
     public activate(dataService:DataService, resourceName:string) {
         this._dataService = dataService;
@@ -117,7 +120,7 @@ export default class ActiveModel extends Model {
         return this._flags.contains(ActiveModelFlag.REMOVED);
     }
 
-    public isDirty(field?: string):boolean {
+    public isDirty(field?:string):boolean {
         if (!this._savedData) {
             return false;
         }
@@ -130,35 +133,31 @@ export default class ActiveModel extends Model {
     }
 
     public isValid(field?:string) {
+
+        if (this['validation']) {
+            var messages:Collection<Message> = this['validation']();
+
+            var valid = true;
+
+            if (field) {
+
+                messages.each(message => {
+
+                    if (message.getField() === field) {
+                        valid = false;
+                    }
+                });
+
+                return valid;
+
+            } else {
+
+                return !!messages.count();
+            }
+        }
+
         return true;
     }
-
-    // public isValid(field?:string) {
-    //
-    //     if (this['validation']) {
-    //         var messages:TSCore.Data.Collection<TSValidate.Message> = this['validation']();
-    //
-    //         var valid = true;
-    //
-    //         if (field) {
-    //
-    //             messages.each(message => {
-    //
-    //                 if (message.getField() === field) {
-    //                     valid = false;
-    //                 }
-    //             });
-    //
-    //             return valid;
-    //
-    //         } else {
-    //
-    //             return !!messages.count();
-    //         }
-    //     }
-    //
-    //     return true;
-    // }
 
     public getResourceIdentifier():string {
         if (!this._resourceName && !this.getId()) {

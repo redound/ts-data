@@ -8,12 +8,11 @@
     "postinstall": "typings install",
     "build": "tsc"
   },
-  "dependencies": {
-    "ts-core": "git+https://github.com/redound/ts-core.git#dev-package",
-    "underscore": "^1.8.3"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "tsd": "^0.6.5"
+    "ts-core": "git+https://github.com/redound/ts-core.git#dev-package",
+    "ts-validate": "git+https://github.com/redound/ts-validate.git#dev-package",
+    "underscore": "^1.8.3"
   },
   "repository": {
     "type": "git",

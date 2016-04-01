@@ -1,6 +1,8 @@
 import Model from "ts-core/lib/Data/Model";
 import Collection from "ts-core/lib/Data/Collection";
 import DataService from "../DataService";
+import { MessageInterface } from "ts-validate/lib/MessageInterface";
+import Validation from "ts-validate/lib/Validation";
 export declare enum ActiveModelFlag {
     ACTIVATED = 0,
     CREATED = 1,
@@ -11,6 +13,10 @@ export default class ActiveModel extends Model {
     protected _dataService: DataService;
     protected _resourceName: string;
     protected _savedData: any;
+    protected _errorMessages: Collection<MessageInterface>;
+    protected validate(validation: Validation): Collection<MessageInterface>;
+    validationHasFailed(): boolean;
+    getMessages(): Collection<MessageInterface>;
     activate(dataService: DataService, resourceName: string): void;
     deactivate(): void;
     setSavedData(data: any): void;
