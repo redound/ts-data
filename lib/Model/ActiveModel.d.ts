@@ -20,6 +20,7 @@ export default class ActiveModel extends Model {
     activate(dataService: DataService, resourceName: string): void;
     deactivate(): void;
     setSavedData(data: any): void;
+    makeSnapshot(): void;
     markRemoved(): void;
     update(data?: any): ng.IPromise<void>;
     create(dataService: DataService, resourceName: string, data?: any): ng.IPromise<any>;

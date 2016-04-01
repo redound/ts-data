@@ -62,6 +62,10 @@ export default class ActiveModel extends Model {
         this._savedData = data;
     }
 
+    public makeSnapshot() {
+        this.setSavedData(this.toObject());
+    }
+
     public markRemoved() {
         this._flags.add(ActiveModelFlag.REMOVED);
     }
