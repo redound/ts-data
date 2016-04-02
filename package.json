@@ -5,7 +5,6 @@
   "main": "lib/ts-data.js",
   "scripts": {
     "test": "",
-    "postinstall": "typings install",
     "build": "tsc"
   },
   "dependencies": {
