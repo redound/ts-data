@@ -114,7 +114,7 @@ export default class ApiDataSource implements DataSourceInterface, QueryExecutor
 
         var transformer = resource.getTransformer();
 
-        return transformer.transformRequest(data);
+        return transformer ? transformer.transformRequest(data): data;
     }
 
     protected _transformResponse(resourceName:string, response:any) {
