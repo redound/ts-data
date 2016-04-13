@@ -248,6 +248,10 @@ export default class Query<T> {
             obj.sorters = this.getSorters();
         }
 
+        if (_.contains(opts, "find")) {
+            obj.find = this.getFind();
+        }
+
         return JSON.stringify(obj);
     }
 

@@ -15,18 +15,19 @@ export interface QueryResultInterface {
 export declare enum ResourceFlag {
     DATA_COMPLETE = 0,
 }
-export declare class MemoryDataSource implements DataSourceInterface {
+export default class MemoryDataSource implements DataSourceInterface {
     protected $q: ng.IQService;
     protected logger: any;
     static QUERY_SERIALIZE_FIELDS: string[];
     protected _dataService: DataService;
     protected _graph: Graph;
-    protected _queryResultMap: Dictionary<string, QueryResultInterface>;
+    protected _queryResultMap: Dictionary<string, Dictionary<string, QueryResultInterface>>;
     protected _resourceFlags: Dictionary<string, Collection<ResourceFlag>>;
     constructor($q: ng.IQService, logger?: any);
     setDataService(service: DataService): void;
     getDataService(): DataService;
     execute(query: Query<any>): ng.IPromise<DataSourceResponseInterface>;
+    protected _executeInGraph(query: Query<any>): ng.IPromise<DataSourceResponseInterface>;
     create(resourceName: string, data: any): ng.IPromise<DataSourceResponseInterface>;
     update(resourceName: string, resourceId: any, data: any): ng.IPromise<DataSourceResponseInterface>;
     remove(resourceName: string, resourceId: any): ng.IPromise<DataSourceResponseInterface>;

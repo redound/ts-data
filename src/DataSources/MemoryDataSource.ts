@@ -20,13 +20,13 @@ export enum ResourceFlag {
     DATA_COMPLETE
 }
 
-export class MemoryDataSource implements DataSourceInterface {
+export default class MemoryDataSource implements DataSourceInterface {
 
     public static QUERY_SERIALIZE_FIELDS = ["from", "conditions", "sorters"];
 
     protected _dataService:DataService;
     protected _graph:Graph = new Graph();
-    protected _queryResultMap:Dictionary<string, QueryResultInterface> = new Dictionary<string, QueryResultInterface>();
+    protected _queryResultMap:Dictionary<string, Dictionary<string, QueryResultInterface>> = new Dictionary<string, Dictionary<string, QueryResultInterface>>();
     protected _resourceFlags:Dictionary<string, Collection<ResourceFlag>> = new Dictionary<string, Collection<ResourceFlag>>();
 
     public constructor(protected $q:ng.IQService,
@@ -43,123 +43,122 @@ export class MemoryDataSource implements DataSourceInterface {
     }
 
     public execute(query:Query<any>):ng.IPromise<DataSourceResponseInterface> {
-        this.logger.info('execute');
 
-        // TODO Needs to be implemented, for now reject
+        this.logger.info('execute', this._queryResultMap);
+
+        // Try straight from Graph
+        if (query.hasFind()) {
+
+            var resourceName = query.getFrom();
+            var resourceId = query.getFind();
+
+            if (this._graph.hasItem(resourceName, resourceId)) {
+
+                var references = [new Reference(resourceName, resourceId)];
+
+                var response = {
+                    meta: {},
+                    graph: this._graph.getGraphForReferences(references),
+                    references: references
+                };
+
+                return this.$q.when(response);
+            }
+            else {
+                return this.$q.reject();
+            }
+        }
+
+        // Try from query cache
+        var serializedQuery = query.serialize(MemoryDataSource.QUERY_SERIALIZE_FIELDS);
+        var resultMap = this._queryResultMap.get(query.getFrom());
+        var queryResult = resultMap ? resultMap.get(serializedQuery) : null;
+
+        if (queryResult) {
+
+            var referenceList = queryResult.references;
+            var offset = query.getOffset();
+            var limit = query.getLimit();
+
+            if (referenceList.containsRange(offset, limit)) {
+
+                var references = referenceList.getRange(offset, limit);
+
+                var response = {
+                    meta: queryResult.meta,
+                    graph: this._graph.getGraphForReferences(references),
+                    references: _.clone(references)
+                };
+
+                return this.$q.when(response);
+            }
+        }
+
+        // Resolve from Graph when data is complete
+        if (this._resourceHasFlag(query.getFrom(), ResourceFlag.DATA_COMPLETE)) {
+
+            return this._executeInGraph(query);
+        }
+
+        // TODO Check includes
+
         return this.$q.reject();
-        //
-        // if (query.hasFind()) {
-        //
-        //     var resourceName = query.getFrom();
-        //     var resourceId = query.getFind();
-        //
-        //     if (this._graph.hasItem(resourceName, resourceId)) {
-        //
-        //         var references = [new Reference(resourceName, resourceId)];
-        //
-        //         var response = {
-        //             meta: {},
-        //             graph: this._graph.getGraphForReferences(references),
-        //             references: references
-        //         };
-        //
-        //         this.logger.info('resolve', response);
-        //
-        //         return this.$q.when(response);
-        //
-        //     } else {
-        //         return this.$q.reject();
-        //     }
-        // }
-        //
-        // var serializedQuery = query.serialize(MemoryDataSource.QUERY_SERIALIZE_FIELDS);
-        //
-        // var queryResult = this._queryResultMap.get(serializedQuery);
-        //
-        // if (queryResult) {
-        //
-        //     // TODO: Implement
-        //     //if (this._resourceHasFlag(query.getFrom(), ResourceFlag.DATA_COMPLETE)) {
-        //     //
-        //     //}
-        //
-        //     var referenceList = queryResult.references;
-        //     var offset = query.getOffset();
-        //     var limit = query.getLimit();
-        //
-        //     if (!referenceList.containsRange(offset, limit)) {
-        //
-        //         return this.$q.reject();
-        //     }
-        //
-        //     var references = referenceList.getRange(offset, limit);
-        //
-        //     this.logger.info('resolve cached results');
-        //
-        //     var response = {
-        //         meta: queryResult.meta,
-        //         graph: this._graph.getGraphForReferences(references),
-        //         references: _.clone(references)
-        //     };
-        //
-        //     this.logger.info('resolve', response);
-        //
-        //     return this.$q.when(response);
-        // }
+    }
+
+    protected _executeInGraph(query:Query<any>):ng.IPromise<DataSourceResponseInterface> {
+
+        // TODO
+        return this.$q.reject();
     }
 
     public create(resourceName:string, data:any):ng.IPromise<DataSourceResponseInterface> {
-        this.logger.info('create');
 
-        // TODO
         return this.$q.reject();
     }
 
     public update(resourceName:string, resourceId:any, data:any):ng.IPromise<DataSourceResponseInterface> {
-        this.logger.info('update');
 
-        // TODO
         return this.$q.reject();
     }
 
     public remove(resourceName:string, resourceId:any):ng.IPromise<DataSourceResponseInterface> {
-        this.logger.info('remove');
 
-        // TODO
         return this.$q.reject();
     }
 
     public notifyExecute(query:Query<any>, response:DataSourceResponseInterface):ng.IPromise<void> {
 
-        this.logger.info('notifyExecute - query ', query, ' - response', response);
-
         this._graph.merge(response.graph);
 
         var serializedQuery = query.serialize(MemoryDataSource.QUERY_SERIALIZE_FIELDS);
-
         var references = _.clone(response.references);
-
         var offset = query.getOffset() || 0;
 
-        if ((response.meta.total && this._graph.countItems(query.getFrom()) === response.meta.total) || (!query.hasOffset() && !query.hasLimit())) {
+        if ((response.meta.total && this._graph.countItems(query.getFrom()) === response.meta.total)
+            || (!query.hasOffset() && !query.hasLimit() && !query.hasFind() && !query.hasConditions())) {
 
-            //this._setResourceFlag(query.getFrom(), ResourceFlag.DATA_COMPLETE);
+            this._setResourceFlag(query.getFrom(), ResourceFlag.DATA_COMPLETE);
         }
 
-        var queryResult = this._queryResultMap.get(serializedQuery);
+        if(!query.hasFind()) {
 
-        if (!queryResult) {
+            var resultMap = this._queryResultMap.get(query.getFrom()) || new Dictionary<string, QueryResultInterface>();
+            var queryResult = resultMap.get(serializedQuery);
 
-            queryResult = {
-                meta: response.meta,
-                query: _.clone(query),
-                references: new DynamicList<Reference>()
-            };
+            if (!queryResult) {
+
+                queryResult = {
+                    meta: response.meta,
+                    query: _.clone(query),
+                    references: new DynamicList<Reference>()
+                };
+            }
+
+            queryResult.references.setRange(offset, references);
+
+            resultMap.set(serializedQuery, queryResult);
+            this._queryResultMap.set(query.getFrom(), resultMap);
         }
-
-        queryResult.references.setRange(offset, references);
-
-        this._queryResultMap.set(serializedQuery, queryResult);
 
         return this.$q.when();
     }
@@ -193,6 +192,10 @@ export class MemoryDataSource implements DataSourceInterface {
 
         this.logger.info('notifyCreate - response', response);
 
+        this._graph.merge(response.graph);
+
+        // TODO: Invalidate query caches when not complete
+
         return this.$q.when();
     }
 
@@ -200,12 +203,18 @@ export class MemoryDataSource implements DataSourceInterface {
 
         this.logger.info('notifyUpdate - response', response);
 
+        this._graph.merge(response.graph);
+
+        // TODO: Invalidate query caches when not complete
+
         return this.$q.when();
     }
 
     public notifyRemove(response:DataSourceResponseInterface):ng.IPromise<void> {
 
         this.logger.info('notifyRemove - response', response);
+
+        // TODO
 
         return this.$q.when();
     }
