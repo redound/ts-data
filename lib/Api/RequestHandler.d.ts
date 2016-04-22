@@ -32,7 +32,9 @@ export default class RequestHandler implements QueryExecutorInterface {
     plugin(plugin: RequestHandlerPluginInterface): RequestHandler;
     request(requestOptions: RequestOptions): ng.IPromise<ng.IHttpPromiseCallbackArg<{}>>;
     execute(query: Query<any>): ng.IPromise<ng.IHttpPromiseCallbackArg<{}>>;
-    protected _getUsedFeatures(query: Query<any>): RequestHandlerFeatures[];
+    protected createRequestOptions(query: Query<any>): RequestOptions;
+    protected applyPlugins(requestOptions: RequestOptions, query: Query<any>): boolean;
+    protected getUsedFeatures(query: Query<any>): RequestHandlerFeatures[];
     all(): ng.IPromise<ng.IHttpPromiseCallbackArg<{}>>;
     find(id: number): ng.IPromise<ng.IHttpPromiseCallbackArg<{}>>;
     create(data: {}): ng.IPromise<ng.IHttpPromiseCallbackArg<{}>>;

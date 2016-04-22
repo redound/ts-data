@@ -14,7 +14,9 @@ export default class ConditionRequestHandlerPlugin implements RequestHandlerPlug
         "lt": ConditionOperator.IS_LESS_THAN,
         "lte": ConditionOperator.IS_LESS_THAN_OR_EQUAL,
         "l": ConditionOperator.IS_LIKE,
-        "ne": ConditionOperator.IS_NOT_EQUAL
+        "ne": ConditionOperator.IS_NOT_EQUAL,
+        "c": ConditionOperator.CONTAINS,
+        "nc": ConditionOperator.NOT_CONTAINS
     };
 
     public execute(requestOptions:RequestOptions, query:Query<any>):RequestHandlerFeatures[] {

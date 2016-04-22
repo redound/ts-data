@@ -3,6 +3,7 @@ import Sorter from "./Sorter";
 import { QueryExecutorInterface } from "./QueryExecutorInterface";
 import { DataServiceResponseInterface } from "../DataService/DataService";
 import Dictionary from "ts-core/lib/Data/Dictionary";
+import { ConditionType } from "../Query/Condition";
 export default class Query<T> {
     protected _from: string;
     protected _offset: number;
@@ -33,9 +34,15 @@ export default class Query<T> {
     getLimit(): number;
     hasLimit(): boolean;
     condition(condition: Condition): Query<T>;
+    removeCondition(condition: Condition): Query<T>;
     multipleConditions(conditions: Condition[]): Query<T>;
     getConditions(): Condition[];
     hasConditions(): boolean;
+    addWhere(type: ConditionType, conditions: string, bind?: any): Query<T>;
+    andWhere(conditions: string, bind?: any): Query<T>;
+    orWhere(conditions: string, bind?: any): Query<T>;
+    where(conditions: string, bind?: any): Query<T>;
+    having(values: any): Query<T>;
     sorter(sorter: Sorter): Query<T>;
     multipleSorters(sorters: Sorter[]): Query<T>;
     getSorters(): Sorter[];
@@ -60,6 +67,8 @@ export default class Query<T> {
     execute(): ng.IPromise<DataServiceResponseInterface<T>>;
     merge(query: Query<T>): Query<T>;
     serialize(opts: string[]): string;
+    protected _resolveTokens(input: string, tokens: any): string;
+    protected _processToken(token: string): string;
     static from(from: any): Query<{}>;
     toObject(): any;
     static fromObject<T>(obj: any): Query<T>;

@@ -4,6 +4,7 @@ import {QueryExecutorInterface} from "./QueryExecutorInterface";
 import {DataServiceResponseInterface} from "../DataService/DataService";
 import * as _ from "underscore";
 import Dictionary from "ts-core/lib/Data/Dictionary";
+import {ConditionOperator, ConditionType} from "../Query/Condition";
 
 export default class Query<T> {
 
@@ -113,6 +114,12 @@ export default class Query<T> {
         return this;
     }
 
+    public removeCondition(condition:Condition):Query<T> {
+
+        this._conditions = _.without(this._conditions, condition);
+        return this;
+    }
+
     public multipleConditions(conditions:Condition[]):Query<T> {
 
         this._conditions = this._conditions.concat(conditions);
@@ -127,6 +134,38 @@ export default class Query<T> {
     public hasConditions():boolean {
 
         return !!(this._conditions.length > 0);
+    }
+
+    public addWhere(type: ConditionType, conditions: string, bind?: any): Query<T> {
+
+        var resolvedCondition = this._resolveTokens(conditions.trim(), bind);
+        this.condition(Condition.parse(type, resolvedCondition));
+
+        return this;
+    }
+
+    public andWhere(conditions: string, bind?: any): Query<T> {
+
+        return this.addWhere(ConditionType.AND, conditions, bind);
+    }
+
+    public orWhere(conditions: string, bind?: any): Query<T> {
+
+        return this.addWhere(ConditionType.OR, conditions, bind);
+    }
+
+    public where(conditions: string, bind?: any): Query<T> {
+
+        return this.andWhere(conditions, bind);
+    }
+
+    public having(values: any): Query<T> {
+
+        _.each(values, (value: string, key: string) => {
+            this.condition(new Condition(ConditionType.AND, key, ConditionOperator.IS_EQUAL, value));
+        });
+
+        return this;
     }
 
     public sorter(sorter:Sorter):Query<T> {
@@ -330,6 +369,37 @@ export default class Query<T> {
 
         return JSON.stringify(obj);
     }
+
+    protected _resolveTokens(input: string, tokens: any): string {
+
+        if(_.isObject(tokens)){
+
+            return input.replace(/:([^:]+):/g, (token: string) => {
+
+                var strippedToken = token.substring(1, token.length-1);
+                var tokenValue = tokens[strippedToken];
+
+                return this._processToken(tokenValue);
+            });
+        }
+        else {
+
+            return input.replace('?', this._processToken(tokens));
+        }
+    }
+
+    protected _processToken(token: string): string {
+
+        if(_.isNull(token) || _.isNaN(token) || _.isUndefined(token)){
+            return 'NULL';
+        }
+        else if(_.isNumber(token)){
+            return token;
+        }
+
+        return "'" + token + "'";
+    }
+
 
     public static from(from) {
 

@@ -70,14 +70,30 @@ export default class RequestHandler implements QueryExecutorInterface {
 
     public execute(query:Query<any>):ng.IPromise<ng.IHttpPromiseCallbackArg<{}>> {
 
+        var requestOptions = this.createRequestOptions(query);
+
+        var pluginsAccepted = this.applyPlugins(requestOptions, query);
+        if(!pluginsAccepted){
+            return this.$q.reject();
+        }
+
+        return this.request(requestOptions);
+    }
+
+    protected createRequestOptions(query:Query<any>): RequestOptions {
+
         var requestOptions = RequestOptions.get('/');
 
         if (query.hasFind()) {
 
             var id = query.getFind();
-
             requestOptions = RequestOptions.get('/:id', {id: id});
         }
+
+        return requestOptions;
+    }
+
+    protected applyPlugins(requestOptions: RequestOptions, query: Query<any>):boolean {
 
         var allowedFeatures = [];
 
@@ -90,18 +106,14 @@ export default class RequestHandler implements QueryExecutorInterface {
 
         allowedFeatures = _.flatten(allowedFeatures);
 
-        var usedFeatures = this._getUsedFeatures(query);
+        var usedFeatures = this.getUsedFeatures(query);
 
         var forbiddenFeatures = _.difference(usedFeatures, allowedFeatures);
 
-        if (forbiddenFeatures.length > 0) {
-            return this.$q.reject();
-        }
-
-        return this.request(requestOptions);
+        return forbiddenFeatures.length == 0;
     }
 
-    protected _getUsedFeatures(query:Query<any>):RequestHandlerFeatures[] {
+    protected getUsedFeatures(query:Query<any>):RequestHandlerFeatures[] {
 
         var features = [];
 

@@ -12,6 +12,8 @@ export default class ConditionRequestHandlerPlugin implements RequestHandlerPlug
         "lte": ConditionOperator;
         "l": ConditionOperator;
         "ne": ConditionOperator;
+        "c": ConditionOperator;
+        "nc": ConditionOperator;
     };
     execute(requestOptions: RequestOptions, query: Query<any>): RequestHandlerFeatures[];
     protected _getQueryOperator(operator: any): any;
