@@ -3,6 +3,7 @@ import Sorter from "./Sorter";
 import {QueryExecutorInterface} from "./QueryExecutorInterface";
 import {DataServiceResponseInterface} from "../DataService/DataService";
 import * as _ from "underscore";
+import Dictionary from "ts-core/lib/Data/Dictionary";
 
 export default class Query<T> {
 
@@ -15,6 +16,7 @@ export default class Query<T> {
     protected _includes:string[] = [];
     protected _excludes:any[] = [];
     protected _find:any;
+    protected _options:Dictionary<string, any> = new Dictionary<string, any>();
 
     protected _executor:QueryExecutorInterface;
 
@@ -209,6 +211,41 @@ export default class Query<T> {
         return !!this._find;
     }
 
+    public option(name: string, value: any):Query<T> {
+
+        this._options.set(name, value);
+        return this;
+    }
+
+    public multipleOptions(options: any):Query<T> {
+
+        _.each(options, (value, key) => {
+            this._options.set(key, value);
+        });
+
+        return this;
+    }
+
+    public getOption(name: string):any {
+
+        return this._options.get(name);
+    }
+
+    public hasOption(name: string):boolean {
+
+        return this._options.contains(name);
+    }
+
+    public hasOptions():boolean {
+
+        return !this._options.isEmpty();
+    }
+
+    public getOptions(): any {
+
+        return this._options.toObject();
+    }
+
     public execute():ng.IPromise<DataServiceResponseInterface<T>> {
 
         if (!this.hasExecutor()) {
@@ -256,6 +293,10 @@ export default class Query<T> {
             this.find(query.getFind());
         }
 
+        if (query.hasOptions()) {
+            this.multipleOptions(query.getOptions());
+        }
+
         return this;
     }
 
@@ -281,6 +322,10 @@ export default class Query<T> {
 
         if (_.contains(opts, "excludes")) {
             obj.excludes = this.getExcludes();
+        }
+
+        if (_.contains(opts, "options")) {
+            obj.options = this.getOptions();
         }
 
         return JSON.stringify(obj);
@@ -315,6 +360,10 @@ export default class Query<T> {
             obj.excludes = this.getExcludes();
         }
 
+        if (this.hasOptions()) {
+            obj.options = this.getOptions();
+        }
+
         return obj;
     }
 
@@ -323,28 +372,27 @@ export default class Query<T> {
         var query = new Query;
 
         if (obj.offset) {
-
             query.offset(obj.offset);
         }
 
         if (obj.limit) {
-
             query.limit(obj.limit);
         }
 
         if (obj.conditions) {
-
             query.multipleConditions(_.map(obj.conditions, (data:any) => new Condition(data.type, data.field, data.operator, data.value)));
         }
 
         if (obj.sorters) {
-
             query.multipleSorters(_.map(obj.sorters, (data:any) => new Sorter(data.field, data.direction)));
         }
 
         if (obj.excludes) {
-
             query.multipleExcludes(obj.excludes);
+        }
+
+        if(obj.options){
+            query.multipleOptions(obj.options);
         }
 
         return query;

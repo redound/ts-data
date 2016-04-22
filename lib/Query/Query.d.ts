@@ -2,6 +2,7 @@ import Condition from "./Condition";
 import Sorter from "./Sorter";
 import { QueryExecutorInterface } from "./QueryExecutorInterface";
 import { DataServiceResponseInterface } from "../DataService/DataService";
+import Dictionary from "ts-core/lib/Data/Dictionary";
 export default class Query<T> {
     protected _from: string;
     protected _offset: number;
@@ -12,6 +13,7 @@ export default class Query<T> {
     protected _includes: string[];
     protected _excludes: any[];
     protected _find: any;
+    protected _options: Dictionary<string, any>;
     protected _executor: QueryExecutorInterface;
     constructor(executor?: QueryExecutorInterface);
     executor(executor: QueryExecutorInterface): Query<T>;
@@ -49,6 +51,12 @@ export default class Query<T> {
     find(id: any): Query<T>;
     getFind(): any;
     hasFind(): boolean;
+    option(name: string, value: any): Query<T>;
+    multipleOptions(options: any): Query<T>;
+    getOption(name: string): any;
+    hasOption(name: string): boolean;
+    hasOptions(): boolean;
+    getOptions(): any;
     execute(): ng.IPromise<DataServiceResponseInterface<T>>;
     merge(query: Query<T>): Query<T>;
     serialize(opts: string[]): string;
