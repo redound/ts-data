@@ -1,5 +1,5 @@
-import Graph from "./Graph/Graph";
-import Reference from "./Graph/Reference";
+import Graph from "../Graph/Graph";
+import Reference from "../Graph/Reference";
 
 export interface DataSourceResponseMetaInterface {
     total?:number

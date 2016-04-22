@@ -1,7 +1,7 @@
 import Collection from "ts-core/lib/Data/Collection";
 import { ModelInterface } from "ts-core/lib/Data/Model";
-import RequestHandler from "./RequestHandler";
-import { TransformerInterface } from "./Transformer";
+import RequestHandler from "./Api/RequestHandler";
+import { TransformerInterface } from "./Api/Transformer";
 export default class Resource {
     protected _prefix: string;
     protected _itemKeys: Collection<string>;

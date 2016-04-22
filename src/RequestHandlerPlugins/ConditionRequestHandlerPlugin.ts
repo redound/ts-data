@@ -1,7 +1,7 @@
 import {ConditionOperator, ConditionType} from "../Query/Condition";
 import RequestOptions from "../Http/RequestOptions";
-import {RequestHandlerPluginInterface} from "../RequestHandlerPluginInterface";
-import {RequestHandlerFeatures} from "../RequestHandler";
+import {RequestHandlerPluginInterface} from "../Api/RequestHandlerPluginInterface";
+import {RequestHandlerFeatures} from "../Api/RequestHandler";
 import Query from "../Query/Query";
 import * as _ from "underscore";
 

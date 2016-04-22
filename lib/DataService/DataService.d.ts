@@ -1,13 +1,13 @@
 import { DataSourceResponseInterface } from "./DataSourceResponseInterface";
 import { DataSourceInterface } from "./DataSourceInterface";
-import { QueryExecutorInterface } from "./Query/QueryExecutorInterface";
+import { QueryExecutorInterface } from "../Query/QueryExecutorInterface";
 import List from "ts-core/lib/Data/List";
-import { ResourceInterface } from "./ResourceInterface";
+import { ResourceInterface } from "../ResourceInterface";
 import Dictionary from "ts-core/lib/Data/Dictionary";
-import ResourceDelegate from "./ResourceDelegate";
+import ResourceDelegate from "../ResourceDelegate";
 import Model from "ts-core/lib/Data/Model";
-import Resource from "./Resource";
-import Query from "./Query/Query";
+import Resource from "../Resource";
+import Query from "../Query/Query";
 import ModelList from "ts-core/lib/Data/ModelList";
 export interface DataSourceExecutionResultInterface {
     response: DataSourceResponseInterface;

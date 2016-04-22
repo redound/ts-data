@@ -1,10 +1,10 @@
-import {QueryExecutorInterface} from "./Query/QueryExecutorInterface";
+import {QueryExecutorInterface} from "../Query/QueryExecutorInterface";
 import ApiService from "./ApiService";
 import {RequestHandlerPluginInterface} from "./RequestHandlerPluginInterface";
 import List from "ts-core/lib/Data/List";
-import {default as HttpService} from "./Http/Service";
-import RequestOptions from "./Http/RequestOptions";
-import Query from "./Query/Query";
+import {default as HttpService} from "../Http/HttpService";
+import RequestOptions from "../Http/RequestOptions";
+import Query from "../Query/Query";
 import {ApiResourceInterface} from "./ApiResourceInterface";
 import * as _ from "underscore";
 

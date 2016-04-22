@@ -1,5 +1,5 @@
 import Model from "ts-core/lib/Data/Model";
-import DataService, { DataServiceResponseInterface } from "./DataService";
+import DataService, { DataServiceResponseInterface } from "./DataService/DataService";
 import ModelList from "ts-core/lib/Data/ModelList";
 import Query from "./Query/Query";
 export default class ResourceDelegate<T extends Model> {

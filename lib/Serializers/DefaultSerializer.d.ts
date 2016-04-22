@@ -1,7 +1,7 @@
 import Dictionary from "ts-core/lib/Data/Dictionary";
 import Resource from "../Resource";
-import { SerializerInterface } from "../SerializerInterface";
-import { DataSourceResponseInterface } from "../DataSourceResponseInterface";
+import { SerializerInterface } from "../Api/SerializerInterface";
+import { DataSourceResponseInterface } from "../DataService/DataSourceResponseInterface";
 import Graph from "../Graph/Graph";
 export default class DefaultSerializer implements SerializerInterface {
     protected resources: Dictionary<string, Resource>;

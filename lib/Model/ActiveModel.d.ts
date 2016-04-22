@@ -1,6 +1,6 @@
 import Model from "ts-core/lib/Data/Model";
 import Collection from "ts-core/lib/Data/Collection";
-import DataService from "../DataService";
+import DataService from "../DataService/DataService";
 import { MessageInterface } from "ts-validate/lib/MessageInterface";
 import Validation from "ts-validate/lib/Validation";
 export declare enum ActiveModelFlag {

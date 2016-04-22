@@ -1,7 +1,7 @@
 import Condition from "./Condition";
 import Sorter from "./Sorter";
 import { QueryExecutorInterface } from "./QueryExecutorInterface";
-import { DataServiceResponseInterface } from "../DataService";
+import { DataServiceResponseInterface } from "../DataService/DataService";
 export default class Query<T> {
     protected _from: string;
     protected _offset: number;

@@ -1,7 +1,7 @@
 import RequestOptions from "./RequestOptions";
 import * as _ from "underscore";
 
-export default class Service {
+export default class HttpService {
 
     public protocol:string;
     public hostname:string;
@@ -27,6 +27,17 @@ export default class Service {
         delete this.defaultHeaders[name];
     }
 
+    public buildUrl(path: string, params?: any): string {
+
+        var url = this.protocol + this.hostname + path;
+
+        if(params){
+            url += this._encodeQueryData(params);
+        }
+
+        return url;
+    }
+
     public request(requestOptions:RequestOptions):ng.IHttpPromise<any> {
 
         requestOptions = this._applyDefaults(requestOptions);
@@ -41,8 +52,17 @@ export default class Service {
         });
 
         var relativeUrl = requestOptions.getUrl();
-        requestOptions.url(this.protocol + this.hostname + relativeUrl);
+        requestOptions.url(this.buildUrl(relativeUrl));
 
         return requestOptions;
+    }
+
+    private _encodeQueryData(data: any): string
+    {
+        var ret = [];
+        for (var d in data)
+            ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(data[d]));
+
+        return ret.join("&");
     }
 }

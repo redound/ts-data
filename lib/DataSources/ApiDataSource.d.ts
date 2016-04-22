@@ -1,11 +1,11 @@
 import { QueryExecutorInterface } from "../Query/QueryExecutorInterface";
-import { DataSourceInterface } from "../DataSourceInterface";
-import DataService from "../DataService";
+import { DataSourceInterface } from "../DataService/DataSourceInterface";
+import DataService from "../DataService/DataService";
 import Query from "../Query/Query";
-import ApiService from "../ApiService";
-import { SerializerInterface } from "../SerializerInterface";
+import ApiService from "../Api/ApiService";
+import { SerializerInterface } from "../Api/SerializerInterface";
 import Logger from "ts-core/lib/Logger/Logger";
-import { DataSourceResponseInterface } from "../DataSourceResponseInterface";
+import { DataSourceResponseInterface } from "../DataService/DataSourceResponseInterface";
 export default class ApiDataSource implements DataSourceInterface, QueryExecutorInterface {
     protected $q: ng.IQService;
     protected apiService: ApiService;

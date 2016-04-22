@@ -1,8 +1,8 @@
 import Dictionary from "ts-core/lib/Data/Dictionary";
-import { QueryExecutorInterface } from "./Query/QueryExecutorInterface";
 import { ApiResourceInterface } from "./ApiResourceInterface";
 import RequestHandler from "./RequestHandler";
-import Query from "./Query/Query";
+import Query from "../Query/Query";
+import { QueryExecutorInterface } from "../Query/QueryExecutorInterface";
 export default class ApiService implements QueryExecutorInterface {
     protected $q: any;
     constructor($q: any);

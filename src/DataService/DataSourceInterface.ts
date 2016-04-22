@@ -1,6 +1,6 @@
 import DataService from "./DataService";
 import {DataSourceResponseInterface} from "./DataSourceResponseInterface";
-import Query from "./Query/Query";
+import Query from "../Query/Query";
 
 export interface DataSourceInterface {
 

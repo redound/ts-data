@@ -1,11 +1,11 @@
 import Query from "../Query/Query";
 import DynamicList from "ts-core/lib/Data/DynamicList";
 import Reference from "../Graph/Reference";
-import { DataSourceInterface } from "../DataSourceInterface";
-import DataService from "../DataService";
+import { DataSourceInterface } from "../DataService/DataSourceInterface";
+import DataService from "../DataService/DataService";
 import Graph from "../Graph/Graph";
 import Dictionary from "ts-core/lib/Data/Dictionary";
-import { DataSourceResponseInterface } from "../DataSourceResponseInterface";
+import { DataSourceResponseInterface } from "../DataService/DataSourceResponseInterface";
 import Collection from "ts-core/lib/Data/Collection";
 export interface QueryResultInterface {
     query: Query<any>;

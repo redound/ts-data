@@ -1,7 +1,7 @@
-import {RequestHandlerPluginInterface} from "../RequestHandlerPluginInterface";
+import {RequestHandlerPluginInterface} from "../Api/RequestHandlerPluginInterface";
 import RequestOptions from "../Http/RequestOptions";
 import Query from "../Query/Query";
-import {RequestHandlerFeatures} from "../RequestHandler";
+import {RequestHandlerFeatures} from "../Api/RequestHandler";
 import {SortDirections} from "../Query/Sorter";
 import * as _ from "underscore";
 

@@ -1,4 +1,4 @@
-import {DataSourceResponseInterface} from "./DataSourceResponseInterface";
+import {DataSourceResponseInterface} from "../DataService/DataSourceResponseInterface";
 
 export interface SerializerInterface {
 

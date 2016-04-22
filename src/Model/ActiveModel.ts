@@ -1,6 +1,6 @@
 import Model from "ts-core/lib/Data/Model";
 import Collection from "ts-core/lib/Data/Collection";
-import DataService, {DataServiceResponseInterface} from "../DataService";
+import DataService, {DataServiceResponseInterface} from "../DataService/DataService";
 import Exception from "ts-core/lib/Exceptions/Exception";
 import {MessageInterface} from "ts-validate/lib/MessageInterface";
 import Message from "ts-validate/lib/Message";
