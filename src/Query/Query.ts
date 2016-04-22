@@ -13,6 +13,7 @@ export default class Query<T> {
     protected _conditions:Condition[] = [];
     protected _sorters:Sorter[] = [];
     protected _includes:string[] = [];
+    protected _excludes:any[] = [];
     protected _find:any;
 
     protected _executor:QueryExecutorInterface;
@@ -170,6 +171,28 @@ export default class Query<T> {
         return (this._includes.length > 0);
     }
 
+    public exclude(exclude:any):Query<T> {
+
+        this._excludes.push(exclude);
+        return this;
+    }
+
+    public multipleExcludes(excludes:any[]):Query<T> {
+
+        this._excludes = this._excludes.concat(excludes);
+        return this;
+    }
+
+    public getExcludes():any[] {
+
+        return this._excludes;
+    }
+
+    public hasExcludes():boolean {
+
+        return (this._excludes.length > 0);
+    }
+
     public find(id:any):Query<T> {
 
         this._find = id;
@@ -225,6 +248,10 @@ export default class Query<T> {
             this.multipleIncludes(query.getIncludes());
         }
 
+        if (query.hasExcludes()) {
+            this.multipleExcludes(query.getExcludes());
+        }
+
         if (query.hasFind()) {
             this.find(query.getFind());
         }
@@ -250,6 +277,10 @@ export default class Query<T> {
 
         if (_.contains(opts, "find")) {
             obj.find = this.getFind();
+        }
+
+        if (_.contains(opts, "excludes")) {
+            obj.excludes = this.getExcludes();
         }
 
         return JSON.stringify(obj);
@@ -280,6 +311,10 @@ export default class Query<T> {
             obj.limit = this.getLimit();
         }
 
+        if (this.hasExcludes()) {
+            obj.excludes = this.getExcludes();
+        }
+
         return obj;
     }
 
@@ -305,6 +340,11 @@ export default class Query<T> {
         if (obj.sorters) {
 
             query.multipleSorters(_.map(obj.sorters, (data:any) => new Sorter(data.field, data.direction)));
+        }
+
+        if (obj.excludes) {
+
+            query.multipleExcludes(obj.excludes);
         }
 
         return query;

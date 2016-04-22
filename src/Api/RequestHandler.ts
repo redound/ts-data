@@ -14,7 +14,8 @@ export enum RequestHandlerFeatures {
     FIELDS,
     CONDITIONS,
     SORTERS,
-    INCLUDES
+    INCLUDES,
+    EXCLUDES
 }
 
 export default class RequestHandler implements QueryExecutorInterface {
@@ -126,6 +127,10 @@ export default class RequestHandler implements QueryExecutorInterface {
 
         if (query.hasIncludes()) {
             features.push(RequestHandlerFeatures.INCLUDES);
+        }
+
+        if (query.hasExcludes()) {
+            features.push(RequestHandlerFeatures.EXCLUDES);
         }
 
         return features;

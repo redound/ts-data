@@ -13,6 +13,7 @@ export * from './RequestHandlerPlugins/LimitRequestHandlerPlugin';
 export * from './RequestHandlerPlugins/OffsetRequestHandlerPlugin';
 export * from './RequestHandlerPlugins/ConditionRequestHandlerPlugin';
 export * from './RequestHandlerPlugins/IncludeRequestHandlerPlugin';
+export * from './RequestHandlerPlugins/ExcludeRequestHandlerPlugin';
 export * from './RequestHandlerPlugins/SortRequestHandlerPlugin';
 export * from './Serializers/DefaultSerializer';
 export * from './Serializers/JsonApiSerializer';

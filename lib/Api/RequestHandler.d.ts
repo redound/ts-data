@@ -13,6 +13,7 @@ export declare enum RequestHandlerFeatures {
     CONDITIONS = 3,
     SORTERS = 4,
     INCLUDES = 5,
+    EXCLUDES = 6,
 }
 export default class RequestHandler implements QueryExecutorInterface {
     protected $q: ng.IQService;

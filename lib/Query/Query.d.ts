@@ -10,6 +10,7 @@ export default class Query<T> {
     protected _conditions: Condition[];
     protected _sorters: Sorter[];
     protected _includes: string[];
+    protected _excludes: any[];
     protected _find: any;
     protected _executor: QueryExecutorInterface;
     constructor(executor?: QueryExecutorInterface);
@@ -41,6 +42,10 @@ export default class Query<T> {
     multipleIncludes(includes: string[]): Query<T>;
     getIncludes(): string[];
     hasIncludes(): boolean;
+    exclude(exclude: any): Query<T>;
+    multipleExcludes(excludes: any[]): Query<T>;
+    getExcludes(): any[];
+    hasExcludes(): boolean;
     find(id: any): Query<T>;
     getFind(): any;
     hasFind(): boolean;
