@@ -4,6 +4,7 @@ import { QueryExecutorInterface } from "./QueryExecutorInterface";
 import { DataServiceResponseInterface } from "../DataService/DataService";
 import Dictionary from "ts-core/lib/Data/Dictionary";
 import { ConditionType } from "../Query/Condition";
+import { SortDirections } from "./Sorter";
 export default class Query<T> {
     protected _from: string;
     protected _offset: number;
@@ -44,6 +45,7 @@ export default class Query<T> {
     where(conditions: string, bind?: any): Query<T>;
     having(values: any): Query<T>;
     sorter(sorter: Sorter): Query<T>;
+    orderBy(field: string, direction?: SortDirections | string): Query<T>;
     multipleSorters(sorters: Sorter[]): Query<T>;
     getSorters(): Sorter[];
     hasSorters(): boolean;
@@ -58,7 +60,7 @@ export default class Query<T> {
     find(id: any): Query<T>;
     getFind(): any;
     hasFind(): boolean;
-    option(name: string, value: any): Query<T>;
+    option(name: string, value?: any): Query<T>;
     multipleOptions(options: any): Query<T>;
     getOption(name: string): any;
     hasOption(name: string): boolean;

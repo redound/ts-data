@@ -5,6 +5,7 @@ import {DataServiceResponseInterface} from "../DataService/DataService";
 import * as _ from "underscore";
 import Dictionary from "ts-core/lib/Data/Dictionary";
 import {ConditionOperator, ConditionType} from "../Query/Condition";
+import {SortDirections} from "./Sorter";
 
 export default class Query<T> {
 
@@ -173,6 +174,21 @@ export default class Query<T> {
         this._sorters.push(sorter);
         return this;
     }
+    
+
+    public orderBy(field: string, direction: SortDirections|string = SortDirections.ASCENDING){
+
+        var resolvedDirection: SortDirections;
+
+        if(_.isString(direction)){
+            resolvedDirection = direction == 'DESC' ? SortDirections.DESCENDING : SortDirections.ASCENDING;
+        }
+        else {
+            resolvedDirection = <SortDirections>direction;
+        }
+
+        return this.sorter(new Sorter(field, resolvedDirection));
+    }
 
     public multipleSorters(sorters:Sorter[]):Query<T> {
 
@@ -250,7 +266,7 @@ export default class Query<T> {
         return !!this._find;
     }
 
-    public option(name: string, value: any):Query<T> {
+    public option(name: string, value: any = null):Query<T> {
 
         this._options.set(name, value);
         return this;
