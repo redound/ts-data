@@ -66,9 +66,7 @@ export default class ApiDataSource implements DataSourceInterface, QueryExecutor
 
         this.logger.info('remove');
 
-        return this.apiService
-            .remove(resourceName, resourceId)
-            .then(response => this._transformResponse(resourceName, response));
+        return this.apiService.remove(resourceName, resourceId);
     }
 
     public notifyExecute(query:Query<any>, response:DataSourceResponseInterface):ng.IPromise<void> {
