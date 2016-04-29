@@ -46,69 +46,127 @@ export default class MemoryDataSource implements DataSourceInterface {
 
         this.logger.info('execute', this._queryResultMap);
 
-        // Try straight from Graph
+        var response:DataSourceResponseInterface = null;
+
         if (query.hasFind()) {
 
-            var resourceName = query.getFrom();
-            var resourceId = query.getFind();
+            response = this.find(query.getFrom(), query.getFind());
+        }
+        else {
 
-            if (this._graph.hasItem(resourceName, resourceId)) {
+            // Try from query cache
+            var serializedQuery = query.serialize(MemoryDataSource.QUERY_SERIALIZE_FIELDS);
+            var resultMap = this._queryResultMap.get(query.getFrom());
+            var queryResult = resultMap ? resultMap.get(serializedQuery) : null;
 
-                var references = [new Reference(resourceName, resourceId)];
+            if (queryResult) {
 
-                var response = {
-                    meta: {},
-                    graph: this._graph.getGraphForReferences(references),
-                    references: references
-                };
+                var referenceList = queryResult.references;
+                var offset = query.getOffset();
+                var limit = query.getLimit();
 
+                if (referenceList.containsRange(offset, limit)) {
+
+                    var references = referenceList.getRange(offset, limit);
+
+                    response = {
+                        meta: queryResult.meta,
+                        graph: this._graph.getGraphForReferences(references),
+                        references: _.clone(references)
+                    };
+                }
+            }
+
+            // Resolve from Graph when data is complete
+            if (!response && this._resourceHasFlag(query.getFrom(), ResourceFlag.DATA_COMPLETE)) {
+
+                response = this._executeInGraph(query);
+            }
+        }
+
+        if(response){
+
+            // Validate includes
+            var includeParts = _.map(query.getIncludes(), (include) => {
+                return include.split('.');
+            });
+
+            var resourceData = response.graph.getItems(query.getFrom());
+
+            var includesValid = true;
+
+            _.each(includeParts, (include) => {
+
+                if(!includesValid){
+                    return;
+                }
+
+                if(!this._validateInclude(resourceData, include)){
+                    includesValid = false;
+                }
+            });
+
+            if(includesValid){
                 return this.$q.when(response);
             }
-            else {
-                return this.$q.reject();
-            }
         }
-
-        // Try from query cache
-        var serializedQuery = query.serialize(MemoryDataSource.QUERY_SERIALIZE_FIELDS);
-        var resultMap = this._queryResultMap.get(query.getFrom());
-        var queryResult = resultMap ? resultMap.get(serializedQuery) : null;
-
-        if (queryResult) {
-
-            var referenceList = queryResult.references;
-            var offset = query.getOffset();
-            var limit = query.getLimit();
-
-            if (referenceList.containsRange(offset, limit)) {
-
-                var references = referenceList.getRange(offset, limit);
-
-                var response = {
-                    meta: queryResult.meta,
-                    graph: this._graph.getGraphForReferences(references),
-                    references: _.clone(references)
-                };
-
-                return this.$q.when(response);
-            }
-        }
-
-        // Resolve from Graph when data is complete
-        if (this._resourceHasFlag(query.getFrom(), ResourceFlag.DATA_COMPLETE)) {
-
-            return this._executeInGraph(query);
-        }
-
-        // TODO Check includes
 
         return this.$q.reject();
     }
 
-    protected _executeInGraph(query:Query<any>):ng.IPromise<DataSourceResponseInterface> {
+    public find(resourceName: string, resourceId: any): DataSourceResponseInterface {
+
+        if (!this._graph.hasItem(resourceName, resourceId)) {
+            return null;
+        }
+
+        var references = [new Reference(resourceName, resourceId)];
+
+        return {
+            meta: {},
+            graph: this._graph.getGraphForReferences(references),
+            references: references
+        };
+    }
+
+    protected _executeInGraph(query:Query<any>): DataSourceResponseInterface {
 
         // TODO
-        return this.$q.reject();
+        return null;
+    }
+
+    protected _validateInclude(items: any[], includeParts: string[]): boolean {
+
+        var valid = true;
+
+        _.each(items, (item) => {
+
+            if(!valid){
+                return;
+            }
+
+            var part = includeParts[0];
+            var nextParts = includeParts.length > 1 ? includeParts.slice(1) : [];
+
+            var val = item[part];
+            if(val == null || val == undefined || (!_.isObject(val) && !_.isArray(val))){
+
+                valid = false;
+            }
+            else {
+
+                if(nextParts.length > 0){
+
+                    var nextItems = _.isArray(val) ? val : [val];
+
+                    if(!this._validateInclude(nextItems, nextParts)){
+                        valid = false;
+                    }
+                }
+            }
+        });
+
+        return valid;
     }
 
     public create(resourceName:string, data:any):ng.IPromise<DataSourceResponseInterface> {

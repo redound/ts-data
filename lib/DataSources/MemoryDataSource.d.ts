@@ -27,7 +27,9 @@ export default class MemoryDataSource implements DataSourceInterface {
     setDataService(service: DataService): void;
     getDataService(): DataService;
     execute(query: Query<any>): ng.IPromise<DataSourceResponseInterface>;
-    protected _executeInGraph(query: Query<any>): ng.IPromise<DataSourceResponseInterface>;
+    find(resourceName: string, resourceId: any): DataSourceResponseInterface;
+    protected _executeInGraph(query: Query<any>): DataSourceResponseInterface;
+    protected _validateInclude(items: any[], includeParts: string[]): boolean;
     create(resourceName: string, data: any): ng.IPromise<DataSourceResponseInterface>;
     update(resourceName: string, resourceId: any, data: any): ng.IPromise<DataSourceResponseInterface>;
     remove(resourceName: string, resourceId: any): ng.IPromise<DataSourceResponseInterface>;

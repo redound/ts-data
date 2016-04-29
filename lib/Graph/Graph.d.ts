@@ -1,6 +1,8 @@
 import Reference from "./Reference";
+import Dictionary from "ts-core/lib/Data/Dictionary";
 export default class Graph {
     protected _data: any;
+    protected _createdEntitiesCache: Dictionary<string, any>;
     constructor(data?: any);
     clear(): void;
     setData(data: any): void;
@@ -13,6 +15,7 @@ export default class Graph {
     _getValueForPath(path: any): any;
     protected _optimizePath(path?: any[]): any[];
     set(path: any[], value: any): this;
+    has(path: any[]): boolean;
     unset(path: any[]): this;
     hasItem(resourceName: string, resourceId: any): boolean;
     setItem(resourceName: string, resourceId: any, resource: any): void;

@@ -1,10 +1,12 @@
 import Reference from "./Reference";
 import * as _ from "underscore";
+import Dictionary from "ts-core/lib/Data/Dictionary";
 
 
 export default class Graph {
 
     protected _data:any;
+    protected _createdEntitiesCache: Dictionary<string, any> = new Dictionary<string, any>();
 
     public constructor(data?) {
         this._data = data || {};
@@ -37,7 +39,24 @@ export default class Graph {
         var parentKey = getAtEndIndex(path, 1);
         var key = getAtEndIndex(path, 0);
 
-        return this._resolveValueRecursive(parentKey, key, value, callback);
+        var useCache = parentKey != null && key != null;
+        var cacheKey = parentKey + ':' + key;
+
+        // Try from cache, in order to prevent endless recursion
+        if(useCache && this._createdEntitiesCache.contains(cacheKey)){
+
+            console.log('FORM CACHE', cacheKey);
+            return this._createdEntitiesCache.get(cacheKey);
+        }
+
+        console.log('Resolving', parentKey, key);
+        var result = this._resolveValueRecursive(parentKey, key, value, callback);
+
+        if(useCache){
+            this._createdEntitiesCache.set(cacheKey, result);
+        }
+
+        return result;
     }
 
     public setValue() {
@@ -56,15 +75,27 @@ export default class Graph {
         var graph = new Graph();
         var value = this.getValue(path);
 
-        this._extractReferences(value, reference => {
+        var donePaths = [];
+
+        var callback = reference => {
 
             var referencePath = reference.value;
-            var referenceValue = this.getValue(referencePath);
+            var pathString = referencePath.join(':');
 
-            if (referenceValue) {
-                graph.set(referencePath, referenceValue);
+            if(!_.contains(donePaths, pathString)) {
+
+                donePaths.push(pathString);
+
+                var referenceValue = this.getValue(referencePath);
+                this._extractReferences(referenceValue, callback);
+
+                if (referenceValue) {
+                    graph.set(referencePath, referenceValue);
+                }
             }
-        });
+        };
+
+        this._extractReferences(value, callback);
 
         if (value) {
             graph.set(path, value);
@@ -168,8 +199,13 @@ export default class Graph {
         }
 
         this._data = value;
+        this._createdEntitiesCache.clear();
 
         return this;
+    }
+
+    public has(path: any[]){
+        return !!this._optimizePath(path);
     }
 
     public unset(path:any[]) {
@@ -196,7 +232,7 @@ export default class Graph {
     }
 
     public hasItem(resourceName:string, resourceId:any):boolean {
-        return !!this._optimizePath([resourceName, resourceId]);
+        return this.has([resourceName, resourceId]);
     }
 
     public setItem(resourceName:string, resourceId:any, resource:any) {
@@ -271,13 +307,7 @@ export default class Graph {
 
             if (this._isReference(value)) {
 
-                var reference = <Reference>value;
-
-                value = this.getValue(reference.value);
-
-                this._extractReferences(value, callback);
-
-                callback(reference);
+                callback(<Reference>value);
 
             } else {
 
