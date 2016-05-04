@@ -10,6 +10,8 @@ import Exception from "ts-core/lib/Exceptions/Exception";
 
 export default class ApiDataSource implements DataSourceInterface, QueryExecutorInterface {
 
+    public static IDENTIFIER = "api";
+
     protected _dataService:DataService;
 
     public constructor(protected $q:ng.IQService,
@@ -17,6 +19,10 @@ export default class ApiDataSource implements DataSourceInterface, QueryExecutor
                        protected serializer:SerializerInterface,
                        protected logger?:Logger) {
         this.logger = (this.logger || new Logger()).child('ApiDataSource');
+    }
+
+    public getIdentifier():string {
+        return ApiDataSource.IDENTIFIER;
     }
 
     public setDataService(service:DataService) {

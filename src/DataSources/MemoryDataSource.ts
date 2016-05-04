@@ -7,8 +7,8 @@ import Graph from "../Graph/Graph";
 import Dictionary from "ts-core/lib/Data/Dictionary";
 import Logger from "ts-core/lib/Logger/Logger";
 import {DataSourceResponseInterface} from "../DataService/DataSourceResponseInterface";
-import Collection from "ts-core/lib/Data/Collection";
 import * as _ from "underscore";
+import Collection from "ts-core/lib/Data/Collection";
 
 export interface QueryResultInterface {
     query:Query<any>,
@@ -23,6 +23,7 @@ export enum ResourceFlag {
 export default class MemoryDataSource implements DataSourceInterface {
 
     public static QUERY_SERIALIZE_FIELDS = ["from", "conditions", "sorters"];
+    public static IDENTIFIER = "memory";
 
     protected _dataService:DataService;
     protected _graph:Graph = new Graph();
@@ -32,6 +33,10 @@ export default class MemoryDataSource implements DataSourceInterface {
     public constructor(protected $q:ng.IQService,
                        protected logger?) {
         this.logger = (this.logger || new Logger()).child('MemoryDataSource');
+    }
+
+    public getIdentifier():string {
+        return MemoryDataSource.IDENTIFIER;
     }
 
     public setDataService(service:DataService) {
@@ -250,13 +255,35 @@ export default class MemoryDataSource implements DataSourceInterface {
         flags.add(flag);
     }
 
+    protected _getResponseResources(response:DataSourceResponseInterface):Collection<string> {
+
+        var resources = new Collection<string>();
+
+        _.each(response.references, (reference) => {
+            resources.add(reference.$type);
+        });
+
+        return resources;
+    }
+
+    protected _clearCachesForIncomingResponse(response:DataSourceResponseInterface) {
+
+        this._getResponseResources(response).each((resourceName) => {
+
+            if (!this._resourceHasFlag(resourceName, ResourceFlag.DATA_COMPLETE)) {
+
+                // Clear query result map
+                this._queryResultMap.remove(resourceName);
+            }
+        });
+    }
+
     public notifyCreate(response:DataSourceResponseInterface):ng.IPromise<void> {
 
         this.logger.info('notifyCreate - response', response);
 
         this._graph.merge(response.graph);
-
-        // TODO: Invalidate query caches when not complete
+        this._clearCachesForIncomingResponse(response);
 
         return this.$q.when();
     }
@@ -266,8 +293,7 @@ export default class MemoryDataSource implements DataSourceInterface {
         this.logger.info('notifyUpdate - response', response);
 
         this._graph.merge(response.graph);
-
-        // TODO: Invalidate query caches when not complete
+        this._clearCachesForIncomingResponse(response);
 
         return this.$q.when();
     }
@@ -276,13 +302,22 @@ export default class MemoryDataSource implements DataSourceInterface {
 
         this.logger.info('notifyRemove - response', response);
 
-        // TODO
+        _.each(response.references, (reference) => {
+
+            this._graph.unset(reference.value);
+        });
+
+        this._clearCachesForIncomingResponse(response);
 
         return this.$q.when();
     }
 
     public clear():ng.IPromise<any> {
-        // TODO
-        return null;
+
+        this._graph.clear();
+        this._resourceFlags.clear();
+        this._queryResultMap.clear();
+
+        return this.$q.when();
     }
 }

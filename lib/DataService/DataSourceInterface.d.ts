@@ -4,6 +4,7 @@ import Query from "../Query/Query";
 export interface DataSourceInterface {
     setDataService(dataService: DataService): any;
     getDataService(): DataService;
+    getIdentifier(): string;
     execute(query: Query<any>): ng.IPromise<DataSourceResponseInterface>;
     create(resourceName: string, data: any): ng.IPromise<DataSourceResponseInterface>;
     update(resourceName: string, resourceId: any, data: any): ng.IPromise<DataSourceResponseInterface>;

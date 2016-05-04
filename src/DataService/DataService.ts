@@ -3,15 +3,17 @@ import {DataSourceInterface} from "./DataSourceInterface";
 import {QueryExecutorInterface} from "../Query/QueryExecutorInterface";
 import List from "ts-core/lib/Data/List";
 import {ResourceInterface} from "../ResourceInterface";
-import Dictionary from "ts-core/lib/Data/Dictionary";
 import ResourceDelegate from "../ResourceDelegate";
 import Model from "ts-core/lib/Data/Model";
 import Resource from "../Resource";
+import DataServiceException from "./DataServiceException";
 import Exception from "ts-core/lib/Exceptions/Exception";
 import Query from "../Query/Query";
 import ModelList from "ts-core/lib/Data/ModelList";
 import ActiveModel from "../Model/ActiveModel";
 import * as _ from "underscore";
+import Dictionary from "ts-core/lib/Data/Dictionary";
+import Reference from "ts-data/lib/Graph/Reference";
 
 export interface DataSourceExecutionResultInterface {
     response:DataSourceResponseInterface,
@@ -102,22 +104,25 @@ export default class DataService implements QueryExecutorInterface {
         return new Query<ModelList<any>>(this).from(resourceName);
     }
 
-    public all(resourceName:string):ng.IPromise<DataServiceResponseInterface<ModelList<any>>> {
+    public all(resourceName:string):ng.IPromise<ModelList<any>> {
 
-        return this.execute(this.query(resourceName));
+        return this.execute(this.query(resourceName)).then(response => {
+
+            return response.data;
+        });
     }
 
-    public find(resourceName:string, resourceId:any):ng.IPromise<DataServiceResponseInterface<any>> {
+    public find(resourceName:string, resourceId:any, includes: string[] = null):ng.IPromise<any> {
 
-        return this.execute(
-            this.query(resourceName)
-                .find(resourceId)
-        ).then(response => {
+        var query = this.query(resourceName).find(resourceId);
 
-            return {
-                response: response.response,
-                data: response.data.first()
-            }
+        if(includes){
+            query.multipleIncludes(includes);
+        }
+
+        return this.execute(query).then(response => {
+
+            return response.data.first();
         });
     }
 
@@ -200,13 +205,19 @@ export default class DataService implements QueryExecutorInterface {
 
     public createModel(resourceName:string, model:any, data?:any):ng.IPromise<DataServiceResponseInterface<any>> {
 
-        if (data) {
-            model.assignAll(data);
-        }
+        var sendData = data || model.toObject(true);
 
-        return this._executeCreate(resourceName, model.toObject(true)).then(response => {
+        return this._executeCreate(resourceName, sendData).then((response: DataSourceResponseInterface) => {
 
-            model = DataService._updateModel(model, response.references);
+            var responseData = sendData;
+
+            if(response.references.length == 1){
+
+                var reference: Reference = response.references[0];
+                responseData = response.graph.get(reference.value);
+            }
+
+            model = DataService._updateModel(model, responseData);
 
             if (model instanceof ActiveModel) {
                 model.activate(this, resourceName);
@@ -260,11 +271,54 @@ export default class DataService implements QueryExecutorInterface {
         });
     }
 
-    public updateModel(resourceName:string, model:any, data?:any):ng.IPromise<void> {
+    public updateModel(resourceName:string, model:any, data?:any, onlyChanges: boolean=true, includeRelations: boolean=true):ng.IPromise<void> {
 
-        return this._executeUpdate(resourceName, model.getId(), data || model.toObject(true)).then(results => {
+        var recursive = includeRelations;
 
-            DataService._updateModel(model, results);
+        if(onlyChanges && model instanceof ActiveModel){
+            
+            if(!data && model.hasSavedData()){
+                data = model.getChanges(recursive);
+            }
+        }
+        
+        if(!data){
+            data = model.toObject(recursive);
+        }
+
+        if(!includeRelations){
+
+            _.each(_.clone(data), (val, key) => {
+
+                _.each(_.isArray(val) ? val : [val], (valItem) => {
+                    
+                    if (valItem instanceof Model) {
+                        delete data[key];
+                    }
+                });
+            });
+        }
+
+        if(_.keys(data).length == 0){
+            return this.$q.when();
+        }
+
+        console.log("Updating data", data);
+        
+        return this._executeUpdate(resourceName, model.getId(), data).then((results: DataSourceResponseInterface) => {
+
+            var data = null;
+
+            if(results.references.length == 1){
+
+                var reference: Reference = results.references[0];
+                data = results.graph.get(reference.value);
+            }
+
+            if(data) {
+                DataService._updateModel(model, data);
+            }
+
             return null;
         });
     }
@@ -359,12 +413,15 @@ export default class DataService implements QueryExecutorInterface {
     protected _executeSources(executor:(source:DataSourceInterface) => ng.IPromise<any>):ng.IPromise<DataSourceExecutionResultInterface> {
 
         var sourceIndex = 0;
+        var sourceErrors = new Dictionary<string, any>();
+        
         var deferred:ng.IDeferred<any> = this.$q.defer();
 
         var nextSource = () => {
 
             if (sourceIndex >= this._sources.count()) {
-                deferred.reject('No dataSources left');
+
+                deferred.reject(new DataServiceException('No datasources are able to fulfill the request', sourceErrors));
                 return;
             }
 
@@ -375,7 +432,11 @@ export default class DataService implements QueryExecutorInterface {
                     response: response,
                     source: source
                 }))
-                .catch(() => nextSource());
+                .catch((error) => {
+                    
+                    sourceErrors.set(source.getIdentifier(), error);
+                    nextSource();
+                });
 
             sourceIndex++;
         };
@@ -392,7 +453,7 @@ export default class DataService implements QueryExecutorInterface {
         model.assignAll(data);
 
         if (model instanceof ActiveModel) {
-            model.setSavedData(data);
+            model.makeSnapshot();
         }
 
         return model;

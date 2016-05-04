@@ -11,8 +11,10 @@ export default class ApiDataSource implements DataSourceInterface, QueryExecutor
     protected apiService: ApiService;
     protected serializer: SerializerInterface;
     protected logger: Logger;
+    static IDENTIFIER: string;
     protected _dataService: DataService;
     constructor($q: ng.IQService, apiService: ApiService, serializer: SerializerInterface, logger?: Logger);
+    getIdentifier(): string;
     setDataService(service: DataService): void;
     getDataService(): DataService;
     execute(query: Query<any>): ng.IPromise<DataSourceResponseInterface>;

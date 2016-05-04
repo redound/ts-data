@@ -20,9 +20,11 @@ export default class ActiveModel extends Model {
     activate(dataService: DataService, resourceName: string): void;
     deactivate(): void;
     setSavedData(data: any): void;
+    hasSavedData(): boolean;
     makeSnapshot(): void;
+    getChanges(recursive?: boolean): any;
     markRemoved(): void;
-    update(data?: any): ng.IPromise<void>;
+    update(data?: any, onlyChanges?: boolean, includeRelations?: boolean): ng.IPromise<void>;
     create(dataService: DataService, resourceName: string, data?: any): ng.IPromise<any>;
     remove(): ng.IPromise<void>;
     refresh(): ng.IPromise<boolean>;

@@ -5,7 +5,9 @@ import Query from "../Query/Query";
 export interface DataSourceInterface {
 
     setDataService(dataService:DataService);
-    getDataService():DataService
+    getDataService():DataService;
+
+    getIdentifier():string;
 
     execute(query:Query<any>):ng.IPromise<DataSourceResponseInterface>;
     create(resourceName:string, data:any):ng.IPromise<DataSourceResponseInterface>;

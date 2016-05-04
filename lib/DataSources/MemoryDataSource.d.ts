@@ -19,11 +19,13 @@ export default class MemoryDataSource implements DataSourceInterface {
     protected $q: ng.IQService;
     protected logger: any;
     static QUERY_SERIALIZE_FIELDS: string[];
+    static IDENTIFIER: string;
     protected _dataService: DataService;
     protected _graph: Graph;
     protected _queryResultMap: Dictionary<string, Dictionary<string, QueryResultInterface>>;
     protected _resourceFlags: Dictionary<string, Collection<ResourceFlag>>;
     constructor($q: ng.IQService, logger?: any);
+    getIdentifier(): string;
     setDataService(service: DataService): void;
     getDataService(): DataService;
     execute(query: Query<any>): ng.IPromise<DataSourceResponseInterface>;
@@ -36,6 +38,8 @@ export default class MemoryDataSource implements DataSourceInterface {
     notifyExecute(query: Query<any>, response: DataSourceResponseInterface): ng.IPromise<void>;
     protected _resourceHasFlag(resourceName: string, flag: ResourceFlag): boolean;
     protected _setResourceFlag(resourceName: string, flag: ResourceFlag): void;
+    protected _getResponseResources(response: DataSourceResponseInterface): Collection<string>;
+    protected _clearCachesForIncomingResponse(response: DataSourceResponseInterface): void;
     notifyCreate(response: DataSourceResponseInterface): ng.IPromise<void>;
     notifyUpdate(response: DataSourceResponseInterface): ng.IPromise<void>;
     notifyRemove(response: DataSourceResponseInterface): ng.IPromise<void>;

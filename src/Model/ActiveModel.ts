@@ -60,23 +60,51 @@ export default class ActiveModel extends Model {
     }
 
     public setSavedData(data:any) {
-        this._savedData = data;
+        this._savedData = _.clone(data);
+    }
+
+    public hasSavedData(): boolean {
+        return !!this._savedData;
     }
 
     public makeSnapshot() {
         this.setSavedData(this.toObject());
     }
 
+    public getChanges(recursive: boolean = false): any {
+
+        if(!this.hasSavedData()){
+            return this.toObject(recursive);
+        }
+
+        var newData = this.toObject(recursive);
+        var changes = {};
+
+        _.each(newData, (val, key) => {
+
+            var oldVal = this._savedData[key];
+
+            var equal = _.isObject(oldVal) && _.isObject(val) ? _.isEqual(oldVal, val) : oldVal == val;
+
+            if(!equal){
+                changes[key] = recursive ? Model.recursiveToObject(val, [this]) : val;
+            }
+        });
+
+        return changes;
+    }
+
     public markRemoved() {
         this._flags.add(ActiveModelFlag.REMOVED);
     }
 
-    public update(data?:any):ng.IPromise<void> {
+    public update(data?:any, onlyChanges: boolean=true, includeRelations: boolean=true):ng.IPromise<void> {
+
         if (!this.isActivated()) {
             throw new Exception('Unable to update ' + this.getResourceIdentifier() + ', model is not alive');
         }
 
-        return this._dataService.updateModel(this._resourceName, this, data);
+        return this._dataService.updateModel(this._resourceName, this, data, onlyChanges, includeRelations);
     }
 
     public create(dataService:DataService, resourceName:string, data?:any):ng.IPromise<any> {
@@ -84,6 +112,7 @@ export default class ActiveModel extends Model {
     }
 
     public remove():ng.IPromise<void> {
+
         if (!this.isActivated()) {
             throw new Exception('Unable to remove ' + this.getResourceIdentifier() + ', model is not alive');
         }
@@ -92,6 +121,7 @@ export default class ActiveModel extends Model {
     }
 
     public refresh():ng.IPromise<boolean> {
+
         if (!this.isActivated()) {
             throw new Exception('Unable to refresh ' + this.getResourceIdentifier() + ', model is not alive');
         }
