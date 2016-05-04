@@ -170,7 +170,7 @@ export default class DataService implements QueryExecutorInterface {
                 if (model instanceof ActiveModel) {
 
                     model.activate(this, resourceName);
-                    model.setSavedData(graph);
+                    model.setSavedData(item);
                 }
 
                 return model;

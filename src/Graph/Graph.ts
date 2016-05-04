@@ -2,7 +2,6 @@ import Reference from "./Reference";
 import * as _ from "underscore";
 import Dictionary from "ts-core/lib/Data/Dictionary";
 
-
 export default class Graph {
 
     protected _data:any;
@@ -24,43 +23,127 @@ export default class Graph {
         return this._data;
     }
 
-    public get(path?:any[], callback?:any) {
+    public get(path?:any[], creationCallback?:any) {
+
+        this._createdEntitiesCache.clear();
 
         path = this._optimizePath(path);
 
+        if(path == null || path.length == 0){
+            return null;
+        }
+
         var value = this._getValueForPath(path);
 
-        function getAtEndIndex(path, index) {
-            path = _.clone(path) || [];
-            path.reverse();
-            return path[index] || null;
+        // 1. Determine required references
+        var references = this._getUniqueReferences(value);
+        var rootReferences = [];
+
+        if(path.length == 1){
+
+            _.each(value, (item, key) => {
+                rootReferences.push(new Reference(path[0], key));
+            });
+        }
+        else if (path.length == 2){
+
+            rootReferences.push(new Reference(path[0], path[1]));
         }
 
-        var parentKey = getAtEndIndex(path, 1);
-        var key = getAtEndIndex(path, 0);
+        references = references.concat(rootReferences);
 
-        var useCache = parentKey != null && key != null;
-        var cacheKey = parentKey + ':' + key;
 
-        // Try from cache, in order to prevent endless recursion
-        if(useCache && this._createdEntitiesCache.contains(cacheKey)){
+        // 2. Create entities
+        _.each(references, (reference: Reference) => {
 
-            console.log('FORM CACHE', cacheKey);
-            return this._createdEntitiesCache.get(cacheKey);
-        }
+            var referenceKey = reference.value.join(':');
 
-        console.log('Resolving', parentKey, key);
-        var result = this._resolveValueRecursive(parentKey, key, value, callback);
+            if(this._createdEntitiesCache.contains(referenceKey)){
+                return;
+            }
 
-        if(useCache){
-            this._createdEntitiesCache.set(cacheKey, result);
-        }
+            var referenceValue = this._getValueForPath(reference.value);
 
-        return result;
+            if(!referenceValue){
+
+                this._createdEntitiesCache.set(referenceKey, null);
+                return;
+            }
+
+            // Remove references
+            var parsedValue = _.clone(referenceValue);
+            _.each(referenceValue, (val, key) => {
+
+                var isReference = this._isReference(val);
+                if(!isReference && _.isArray(val)){
+
+                    _.each(val, (valItem) => {
+
+                        if(!isReference && this._isReference(valItem)){
+                            isReference = true;
+                        }
+                    })
+                }
+
+                if(isReference){
+                    delete parsedValue[key];
+                }
+            });
+
+            var entity = creationCallback ? creationCallback(reference.value[0], parsedValue) : parsedValue;
+            this._createdEntitiesCache.set(referenceKey, entity);
+        });
+
+
+        // 3. Connect entities
+        this._resolveValueRecursive(null, rootReferences, (refPathKey) => {
+
+            return this._createdEntitiesCache.get(refPathKey);
+        });
+
+        return path.length == 1 ? rootReferences : _.first(rootReferences);
     }
 
-    public setValue() {
+    protected _resolveValueRecursive(subject, rootValue, callback?:any) {
 
+        var resolvedPaths = [];
+
+        var resolve = (subject, value, key) => {
+
+            if (this._isReference(value) && key !== null) {
+
+                var pathKey = value.value.join(':');
+
+                var resolvedItem = callback(pathKey, value.value);
+                subject[key] = resolvedItem;
+
+                if(!_.contains(resolvedPaths, pathKey)) {
+
+                    resolvedPaths.push(pathKey);
+                    resolve(resolvedItem, _.clone(this._getValueForPath(value.value)), null);
+                }
+            }
+            else if (_.isArray(value)) {
+
+                _.each(value, (itemVal, itemIndex) => {
+
+                    resolve(value, _.clone(itemVal), itemIndex);
+                });
+
+                if(key !== null && subject[key] == undefined){
+                    subject[key] = value;
+                }
+            }
+            else if (_.isObject(value)) {
+
+                _.each(value, (itemVal, itemKey) => {
+
+                    resolve(subject, _.clone(itemVal), itemKey);
+                });
+            }
+        };
+
+        resolve(subject, rootValue, null);
     }
 
     public getValue(path?:any[]) {
@@ -276,13 +359,13 @@ export default class Graph {
     }
 
     public mergeData(data:any) {
-
+        
         _.each(data, (resources:any, resourceName:string) => {
-
+        
             _.each(resources, (item, resourceId) => {
-
-                var currentItem = this.getItem(resourceName, resourceId);
-
+        
+                var currentItem = this._getValueForPath([resourceName, resourceId]);
+        
                 if (!currentItem) {
                     this.setItem(resourceName, resourceId, item);
                 }
@@ -316,39 +399,29 @@ export default class Graph {
         });
     }
 
-    protected _resolveValueRecursive(parentKey, key, value, callback?:any) {
+    protected _getUniqueReferences(data): Reference[] {
 
-        if (this._isReference(value)) {
-            return this.get(value.value, callback);
-        }
+        var donePaths = [];
+        var references = [];
 
-        if (_.isArray(value)) {
+        var callback = reference => {
 
-            value = _.map(value, (subValue, subKey) => {
-                return this._resolveValueRecursive(key, subKey, subValue, callback);
-            });
-        }
-        else if (_.isObject(value)) {
+            var referencePath = reference.value;
+            var pathString = referencePath.join(':');
 
-            value = _.mapObject(value, (subValue, subKey) => {
-                return this._resolveValueRecursive(key, subKey, subValue, callback);
-            });
+            if(!_.contains(donePaths, pathString)) {
 
-            if (this._isResourceName(key)) {
-                value = _.values(value);
+                donePaths.push(pathString);
+                references.push(reference);
+
+                var referenceValue = this.getValue(referencePath);
+                this._extractReferences(referenceValue, callback);
             }
-        }
+        };
 
-        if (_.isObject(value) && !_.isArray(value) && callback) {
+        this._extractReferences(data, callback);
 
-            if (this._isResourceName(key)) {
-                value = callback(key, value);
-            } else if (this._isResourceName(parentKey)) {
-                value = callback(parentKey, value);
-            }
-        }
-
-        return value;
+        return references;
     }
 
     protected _isResourceName(resourceName:string):boolean {

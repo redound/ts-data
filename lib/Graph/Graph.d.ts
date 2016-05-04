@@ -7,8 +7,8 @@ export default class Graph {
     clear(): void;
     setData(data: any): void;
     getData(): any;
-    get(path?: any[], callback?: any): any;
-    setValue(): void;
+    get(path?: any[], creationCallback?: any): any;
+    protected _resolveValueRecursive(subject: any, rootValue: any, callback?: any): void;
     getValue(path?: any[]): any;
     getGraphForPath(path: any[]): Graph;
     getGraphForReferences(references: Reference[]): Graph;
@@ -30,6 +30,6 @@ export default class Graph {
     mergeData(data: any): void;
     protected _isReference(value: any): boolean;
     protected _extractReferences(data: any, callback: any): void;
-    protected _resolveValueRecursive(parentKey: any, key: any, value: any, callback?: any): any;
+    protected _getUniqueReferences(data: any): Reference[];
     protected _isResourceName(resourceName: string): boolean;
 }

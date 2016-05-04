@@ -44,8 +44,6 @@ export default class MemoryDataSource implements DataSourceInterface {
 
     public execute(query:Query<any>):ng.IPromise<DataSourceResponseInterface> {
 
-        this.logger.info('execute', this._queryResultMap);
-
         var response:DataSourceResponseInterface = null;
 
         if (query.hasFind()) {
@@ -91,7 +89,11 @@ export default class MemoryDataSource implements DataSourceInterface {
                 return include.split('.');
             });
 
-            var resourceData = response.graph.getItems(query.getFrom());
+            var resourceData = [];
+
+            _.each(response.references, (ref: Reference) => {
+                resourceData.push(response.graph.get(ref.value));
+            });
 
             var includesValid = true;
 
@@ -102,6 +104,7 @@ export default class MemoryDataSource implements DataSourceInterface {
                 }
 
                 if(!this._validateInclude(resourceData, include)){
+
                     includesValid = false;
                 }
             });
@@ -151,6 +154,7 @@ export default class MemoryDataSource implements DataSourceInterface {
             var val = item[part];
             if(val == null || val == undefined || (!_.isObject(val) && !_.isArray(val))){
 
+                this.logger.log('Missing include', part);
                 valid = false;
             }
             else {
