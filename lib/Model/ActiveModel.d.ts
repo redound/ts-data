@@ -28,6 +28,7 @@ export default class ActiveModel extends Model {
     create(dataService: DataService, resourceName: string, data?: any): ng.IPromise<any>;
     remove(): ng.IPromise<void>;
     refresh(): ng.IPromise<boolean>;
+    invalidate(): ng.IPromise<void>;
     isActivated(): boolean;
     isCreated(): boolean;
     isRemoved(): boolean;

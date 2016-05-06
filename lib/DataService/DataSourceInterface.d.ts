@@ -13,5 +13,5 @@ export interface DataSourceInterface {
     notifyCreate(response: DataSourceResponseInterface): ng.IPromise<void>;
     notifyUpdate(response: DataSourceResponseInterface): ng.IPromise<void>;
     notifyRemove(response: DataSourceResponseInterface): ng.IPromise<void>;
-    clear(): ng.IPromise<any>;
+    invalidate(resourceName?: string, resourceId?: any): ng.IPromise<void>;
 }

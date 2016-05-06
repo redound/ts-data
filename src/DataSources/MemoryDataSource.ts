@@ -49,11 +49,16 @@ export default class MemoryDataSource implements DataSourceInterface {
 
     public execute(query:Query<any>):ng.IPromise<DataSourceResponseInterface> {
 
+        this.logger.log('Executing query', query);
+
         var response:DataSourceResponseInterface = null;
 
         if (query.hasFind()) {
 
             response = this.find(query.getFrom(), query.getFind());
+            if(response){
+                this.logger.log('Found item ' + query.getFind());
+            }
         }
         else {
 
@@ -62,13 +67,15 @@ export default class MemoryDataSource implements DataSourceInterface {
             var resultMap = this._queryResultMap.get(query.getFrom());
             var queryResult = resultMap ? resultMap.get(serializedQuery) : null;
 
+            this.logger.info('Trying query cache with key', serializedQuery);
+
             if (queryResult) {
 
                 var referenceList = queryResult.references;
                 var offset = query.getOffset();
                 var limit = query.getLimit();
 
-                if (referenceList.containsRange(offset, limit)) {
+                if (limit != null && referenceList.containsRange(offset, limit)) {
 
                     var references = referenceList.getRange(offset, limit);
 
@@ -77,13 +84,20 @@ export default class MemoryDataSource implements DataSourceInterface {
                         graph: this._graph.getGraphForReferences(references),
                         references: _.clone(references)
                     };
+
+                    this.logger.log('Found in query cache (' + references.length + ' records)');
                 }
             }
 
             // Resolve from Graph when data is complete
             if (!response && this._resourceHasFlag(query.getFrom(), ResourceFlag.DATA_COMPLETE)) {
 
+                this.logger.info('Got all data in memory, trying executing in local graph');
+
                 response = this._executeInGraph(query);
+                if(response){
+                    this.logger.log('Executed query in graph');
+                }
             }
         }
 
@@ -115,8 +129,17 @@ export default class MemoryDataSource implements DataSourceInterface {
             });
 
             if(includesValid){
+
+                this.logger.log('Response valid', response);
                 return this.$q.when(response);
             }
+            else {
+                this.logger.log('Found data invalid, includes are not present');
+            }
+        }
+        else {
+
+            this.logger.log('No data found');
         }
 
         return this.$q.reject();
@@ -312,11 +335,35 @@ export default class MemoryDataSource implements DataSourceInterface {
         return this.$q.when();
     }
 
-    public clear():ng.IPromise<any> {
+    public invalidate(resourceName?: string, resourceId?: any):ng.IPromise<void>  {
 
-        this._graph.clear();
-        this._resourceFlags.clear();
-        this._queryResultMap.clear();
+        if(resourceName) {
+
+            if (resourceId) {
+
+                // Clear one item
+                this._graph.removeItem(resourceName, resourceId);
+                this.logger.log('Cleared item', resourceName, resourceId);
+            }
+            else {
+
+                // Clear all from resource
+                this._graph.removeItems(resourceName);
+                this.logger.log('Cleared resource', resourceName);
+            }
+
+            this._queryResultMap.remove(resourceName);
+            this._resourceFlags.remove(resourceName);
+        }
+        else {
+
+            // Clear all
+            this._graph.clear();
+            this._resourceFlags.clear();
+            this._queryResultMap.clear();
+
+            this.logger.log('Cleared all');
+        }
 
         return this.$q.when();
     }

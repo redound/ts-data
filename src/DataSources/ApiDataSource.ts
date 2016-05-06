@@ -103,7 +103,7 @@ export default class ApiDataSource implements DataSourceInterface, QueryExecutor
         return this.$q.when();
     }
 
-    public clear():ng.IPromise<any> {
+    public invalidate(resourceName?: string, resourceId?: any):ng.IPromise<void> {
         // Do nothing
         return this.$q.when();
     }

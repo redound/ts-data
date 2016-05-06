@@ -13,7 +13,7 @@ import ModelList from "ts-core/lib/Data/ModelList";
 import ActiveModel from "../Model/ActiveModel";
 import * as _ from "underscore";
 import Dictionary from "ts-core/lib/Data/Dictionary";
-import Reference from "ts-data/lib/Graph/Reference";
+import Reference from "../Graph/Reference";
 
 export interface DataSourceExecutionResultInterface {
     response:DataSourceResponseInterface,
@@ -154,6 +154,13 @@ export default class DataService implements QueryExecutorInterface {
                     data: this._createModels(response)
                 };
             });
+    }
+    
+    public invalidate(resourceName?: string, resourceId?: any): ng.IPromise<void>
+    {
+        return this._callInSources((source:DataSourceInterface) => {
+            return source.invalidate(resourceName, resourceId);
+        });
     }
 
     protected _createModels(response:DataSourceResponseInterface):ModelList<any> {
@@ -396,6 +403,17 @@ export default class DataService implements QueryExecutorInterface {
     }
 
     /** Source **/
+
+    protected _callInSources(executor:(source:DataSourceInterface) => ng.IPromise<any>):ng.IPromise<any> {
+
+        var promises = [];
+
+        this._sources.each((source) => {
+            promises.push(executor(source));
+        });
+
+        return this.$q.all(promises);
+    }
 
     protected _notifySources(startIndex:number, executor:(source:DataSourceInterface) => ng.IPromise<any>):ng.IPromise<any> {
 

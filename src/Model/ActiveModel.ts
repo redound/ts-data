@@ -142,6 +142,15 @@ export default class ActiveModel extends Model {
         });
     }
 
+    public invalidate():ng.IPromise<void> {
+
+        if (!this.isActivated()) {
+            throw new Exception('Unable to invalidate ' + this.getResourceIdentifier() + ', model is not alive');
+        }
+
+        return this._dataService.invalidate(this._resourceName, this.getId());
+    }
+
     // Flag helpers
     public isActivated():boolean {
         return this._flags.contains(ActiveModelFlag.ACTIVATED);
