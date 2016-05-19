@@ -26,6 +26,10 @@ export interface DataServiceResponseInterface<T> {
 }
 
 export default class DataService implements QueryExecutorInterface {
+
+    protected updateFullModel: boolean = false;
+    protected updateRelations: boolean = false;
+
     protected _sources:List<DataSourceInterface> = new List<DataSourceInterface>();
     protected _resources:Dictionary<string, ResourceInterface> = new Dictionary<string, ResourceInterface>();
 
@@ -278,11 +282,11 @@ export default class DataService implements QueryExecutorInterface {
         });
     }
 
-    public updateModel(resourceName:string, model:any, data?:any, onlyChanges: boolean=true, includeRelations: boolean=true):ng.IPromise<void> {
+    public updateModel(resourceName:string, model:any, data?:any):ng.IPromise<void> {
 
-        var recursive = includeRelations;
+        var recursive = this.updateRelations;
 
-        if(onlyChanges && model instanceof ActiveModel){
+        if(!this.updateFullModel && model instanceof ActiveModel){
             
             if(!data && model.hasSavedData()){
                 data = model.getChanges(recursive);
@@ -293,7 +297,7 @@ export default class DataService implements QueryExecutorInterface {
             data = model.toObject(recursive);
         }
 
-        if(!includeRelations){
+        if(!this.updateRelations){
 
             _.each(_.clone(data), (val, key) => {
 
@@ -309,8 +313,6 @@ export default class DataService implements QueryExecutorInterface {
         if(_.keys(data).length == 0){
             return this.$q.when();
         }
-
-        console.log("Updating data", data);
         
         return this._executeUpdate(resourceName, model.getId(), data).then((results: DataSourceResponseInterface) => {
 
@@ -328,6 +330,18 @@ export default class DataService implements QueryExecutorInterface {
 
             return null;
         });
+    }
+
+    public setUpdateSendsFullModel(fullModel: boolean): DataService {
+
+        this.updateFullModel = fullModel;
+        return this;
+    }
+
+    public setUpdateSendsRelations(relations: boolean): DataService {
+
+        this.updateRelations = relations;
+        return this;
     }
 
     protected _executeUpdate(resourceName:string, resourceId:any, data:any):ng.IPromise<DataSourceResponseInterface> {

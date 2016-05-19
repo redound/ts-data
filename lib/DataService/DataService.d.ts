@@ -19,6 +19,8 @@ export interface DataServiceResponseInterface<T> {
 }
 export default class DataService implements QueryExecutorInterface {
     protected $q: ng.IQService;
+    protected updateFullModel: boolean;
+    protected updateRelations: boolean;
     protected _sources: List<DataSourceInterface>;
     protected _resources: Dictionary<string, ResourceInterface>;
     protected _resourceDelegateCache: Dictionary<string, ResourceDelegate<Model>>;
@@ -41,7 +43,9 @@ export default class DataService implements QueryExecutorInterface {
     createModel(resourceName: string, model: any, data?: any): ng.IPromise<DataServiceResponseInterface<any>>;
     protected _executeCreate(resourceName: string, data: any): ng.IPromise<DataSourceResponseInterface>;
     update(resourceName: string, resourceId: any, data: any): ng.IPromise<DataServiceResponseInterface<Model>>;
-    updateModel(resourceName: string, model: any, data?: any, onlyChanges?: boolean, includeRelations?: boolean): ng.IPromise<void>;
+    updateModel(resourceName: string, model: any, data?: any): ng.IPromise<void>;
+    setUpdateSendsFullModel(fullModel: boolean): DataService;
+    setUpdateSendsRelations(relations: boolean): DataService;
     protected _executeUpdate(resourceName: string, resourceId: any, data: any): ng.IPromise<DataSourceResponseInterface>;
     remove(resourceName: string, resourceId: any): ng.IPromise<void>;
     removeModel(resourceName: string, model: Model): ng.IPromise<void>;
