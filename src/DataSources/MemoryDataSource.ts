@@ -335,7 +335,7 @@ export default class MemoryDataSource implements DataSourceInterface {
         return this.$q.when();
     }
 
-    public invalidate(resourceName?: string, resourceId?: any):ng.IPromise<void>  {
+    public invalidate(resourceName?: string, resourceId?: any):ng.IPromise<void> {
 
         if(resourceName) {
 
@@ -364,6 +364,20 @@ export default class MemoryDataSource implements DataSourceInterface {
 
             this.logger.log('Cleared all');
         }
+
+        return this.$q.when();
+    }
+
+    public invalidateQuery(query: Query<any>):ng.IPromise<void> {
+
+        var serializedQuery = query.serialize(MemoryDataSource.QUERY_SERIALIZE_FIELDS);
+        var resultMap = this._queryResultMap.get(query.getFrom());
+
+        if(resultMap){
+            resultMap.remove(serializedQuery);
+        }
+
+        this.logger.log('Cleared query', query);
 
         return this.$q.when();
     }

@@ -26,6 +26,7 @@ export default class ApiDataSource implements DataSourceInterface, QueryExecutor
     notifyUpdate(response: DataSourceResponseInterface): ng.IPromise<void>;
     notifyRemove(response: DataSourceResponseInterface): ng.IPromise<void>;
     invalidate(resourceName?: string, resourceId?: any): ng.IPromise<void>;
+    invalidateQuery(query: Query<any>): ng.IPromise<void>;
     protected _transformRequest(resourceName: string, data: any): any;
     protected _transformResponse(resourceName: string, response: any): DataSourceResponseInterface;
 }

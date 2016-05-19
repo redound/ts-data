@@ -38,6 +38,7 @@ export default class DataService implements QueryExecutorInterface {
     find(resourceName: string, resourceId: any, includes?: string[]): ng.IPromise<any>;
     execute(query: Query<ModelList<any>>): ng.IPromise<DataServiceResponseInterface<ModelList<any>>>;
     invalidate(resourceName?: string, resourceId?: any): ng.IPromise<void>;
+    invalidateQuery(query: Query<any>): ng.IPromise<void>;
     protected _createModels(response: DataSourceResponseInterface): ModelList<any>;
     create(resourceName: string, data: any): ng.IPromise<DataServiceResponseInterface<any>>;
     createModel(resourceName: string, model: any, data?: any): ng.IPromise<DataServiceResponseInterface<any>>;

@@ -20,4 +20,5 @@ export interface DataSourceInterface {
     notifyRemove(response:DataSourceResponseInterface):ng.IPromise<void>;
 
     invalidate(resourceName?:string, resourceId?: any):ng.IPromise<void>;
+    invalidateQuery(query:Query<any>):ng.IPromise<void>;
 }

@@ -167,6 +167,13 @@ export default class DataService implements QueryExecutorInterface {
         });
     }
 
+    public invalidateQuery(query: Query<any>): ng.IPromise<void> {
+
+        return this._callInSources((source:DataSourceInterface) => {
+            return source.invalidateQuery(query);
+        });
+    }
+
     protected _createModels(response:DataSourceResponseInterface):ModelList<any> {
 
         var graph = response.graph;
