@@ -343,13 +343,13 @@ export default class MemoryDataSource implements DataSourceInterface {
 
                 // Clear one item
                 this._graph.removeItem(resourceName, resourceId);
-                this.logger.log('Cleared item', resourceName, resourceId);
+                // this.logger.info('Cleared item', resourceName, resourceId);
             }
             else {
 
                 // Clear all from resource
                 this._graph.removeItems(resourceName);
-                this.logger.log('Cleared resource', resourceName);
+                // this.logger.info('Cleared resource', resourceName);
             }
 
             this._queryResultMap.remove(resourceName);
@@ -362,7 +362,7 @@ export default class MemoryDataSource implements DataSourceInterface {
             this._resourceFlags.clear();
             this._queryResultMap.clear();
 
-            this.logger.log('Cleared all');
+            // this.logger.info('Cleared all');
         }
 
         return this.$q.when();
