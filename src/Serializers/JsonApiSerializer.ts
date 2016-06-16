@@ -60,7 +60,9 @@ export default class JsonApiSerializer implements SerializerInterface {
 
             var item = attributes;
 
-            item = transformer.item(attributes);
+            if(transformer) {
+                item = transformer.item(attributes);
+            }
 
             _.each(relationships, (relationship:any, propertyName:string) => {
 
