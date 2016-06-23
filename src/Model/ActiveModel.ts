@@ -98,17 +98,22 @@ export default class ActiveModel extends Model {
         this._flags.add(ActiveModelFlag.REMOVED);
     }
 
-    public update(data?:any):ng.IPromise<void> {
+    public update(data?:any):ng.IPromise<Model> {
 
         if (!this.isActivated()) {
             throw new Exception('Unable to update ' + this.getResourceIdentifier() + ', model is not alive');
         }
 
-        return this._dataService.updateModel(this._resourceName, this, data);
+        return this._dataService.updateModel(this._resourceName, this, data).then(() => {
+            return this;
+        });
     }
 
-    public create(dataService:DataService, resourceName:string, data?:any):ng.IPromise<any> {
-        return dataService.createModel(resourceName, this, data);
+    public create(dataService:DataService, resourceName:string, data?:any):ng.IPromise<Model> {
+
+        return dataService.createModel(resourceName, this, data).then(() => {
+            return this;
+        });
     }
 
     public remove():ng.IPromise<void> {

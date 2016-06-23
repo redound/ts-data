@@ -24,8 +24,8 @@ export default class ActiveModel extends Model {
     makeSnapshot(): void;
     getChanges(recursive?: boolean): any;
     markRemoved(): void;
-    update(data?: any): ng.IPromise<void>;
-    create(dataService: DataService, resourceName: string, data?: any): ng.IPromise<any>;
+    update(data?: any): ng.IPromise<Model>;
+    create(dataService: DataService, resourceName: string, data?: any): ng.IPromise<Model>;
     remove(): ng.IPromise<void>;
     refresh(): ng.IPromise<boolean>;
     invalidate(): ng.IPromise<void>;

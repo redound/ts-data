@@ -33,7 +33,7 @@ export default class JsonApiSerializer implements SerializerInterface {
         return {
             meta: meta,
             graph: dataGraph,
-            references: _.map(data, (itemData:any) => {
+            references: _.map(_.isArray(data) ? data : [data], (itemData:any) => {
 
                 return new Reference(resourceName, itemData[primaryKey]);
             })
