@@ -18,8 +18,8 @@ export default class ResourceDelegate<T extends Model> {
         return this._dataService.query(this._resourceName);
     }
 
-    public all():ng.IPromise<ModelList<T>> {
-        return this._dataService.all(this._resourceName);
+    public all(includes: string[] = null):ng.IPromise<ModelList<T>> {
+        return this._dataService.all(this._resourceName, includes);
     }
 
     public find(resourceId:any, includes: string[] = null):ng.IPromise<T> {

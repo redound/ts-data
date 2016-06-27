@@ -34,7 +34,7 @@ export default class DataService implements QueryExecutorInterface {
     getResourceAsync(name: string): ng.IPromise<Resource>;
     getResourceDelegate<T extends Model>(resourceName: string): ResourceDelegate<T>;
     query(resourceName: string): Query<ModelList<any>>;
-    all(resourceName: string): ng.IPromise<ModelList<any>>;
+    all(resourceName: string, includes?: string[]): ng.IPromise<ModelList<any>>;
     find(resourceName: string, resourceId: any, includes?: string[]): ng.IPromise<any>;
     execute(query: Query<ModelList<any>>): ng.IPromise<DataServiceResponseInterface<ModelList<any>>>;
     invalidate(resourceName?: string, resourceId?: any): ng.IPromise<void>;

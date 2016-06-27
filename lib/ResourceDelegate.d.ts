@@ -7,7 +7,7 @@ export default class ResourceDelegate<T extends Model> {
     protected _resourceName: string;
     constructor(dataService: DataService, resourceName: string);
     query(): Query<ModelList<T>>;
-    all(): ng.IPromise<ModelList<T>>;
+    all(includes?: string[]): ng.IPromise<ModelList<T>>;
     find(resourceId: any, includes?: string[]): ng.IPromise<T>;
     create(data: any): ng.IPromise<DataServiceResponseInterface<T>>;
     createModel(model: T, data?: any): ng.IPromise<DataServiceResponseInterface<T>>;

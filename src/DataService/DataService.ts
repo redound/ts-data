@@ -108,9 +108,15 @@ export default class DataService implements QueryExecutorInterface {
         return new Query<ModelList<any>>(this).from(resourceName);
     }
 
-    public all(resourceName:string):ng.IPromise<ModelList<any>> {
+    public all(resourceName:string, includes: string[] = null):ng.IPromise<ModelList<any>> {
 
-        return this.execute(this.query(resourceName)).then(response => {
+        var query = this.query(resourceName);
+        
+        if(includes){
+            query.multipleIncludes(includes);
+        }
+        
+        return this.execute(query).then(response => {
 
             return response.data;
         });
