@@ -222,7 +222,7 @@ export default class DataService implements QueryExecutorInterface {
 
             return {
                 response: response,
-                data: this._createModels(response)[0] || null
+                data: this._createModels(response).get(0) || null
             };
         });
     }

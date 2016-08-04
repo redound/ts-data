@@ -17,7 +17,7 @@ export declare enum ResourceFlag {
 }
 export default class MemoryDataSource implements DataSourceInterface {
     protected $q: ng.IQService;
-    protected logger: any;
+    protected logger?: any;
     static QUERY_SERIALIZE_FIELDS: string[];
     static IDENTIFIER: string;
     protected _dataService: DataService;
