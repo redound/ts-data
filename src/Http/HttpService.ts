@@ -32,7 +32,7 @@ export default class HttpService {
         var url = this.protocol + this.hostname + path;
 
         if(params){
-            url += this._encodeQueryData(params);
+            url += '?' + this._encodeQueryData(params);
         }
 
         return url;
