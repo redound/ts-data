@@ -10,6 +10,8 @@ import {DataSourceResponseInterface} from "../DataService/DataSourceResponseInte
 import * as _ from "underscore";
 import Collection from "ts-core/lib/Data/Collection";
 import {lang} from "moment";
+import {SortDirections} from "ts-data/Query/Sorter";
+import {ConditionOperator} from "../ts-data";
 
 export interface QueryResultInterface {
     query:Query<any>,
@@ -18,7 +20,7 @@ export interface QueryResultInterface {
 }
 
 export enum ResourceFlag {
-    DATA_COMPLETE
+    DATA_COMPLETE = 1
 }
 
 export default class MemoryDataSource implements DataSourceInterface {
@@ -103,8 +105,6 @@ export default class MemoryDataSource implements DataSourceInterface {
             resourceFlags: resourceFlags
         };
 
-        console.log('PAYLOAD', payload);
-
         window.localStorage.setItem(MemoryDataSource.PERSISTENCE_KEY, JSON.stringify(payload));
     }
 
@@ -149,14 +149,14 @@ export default class MemoryDataSource implements DataSourceInterface {
             return val;
         })));
 
-        this._resourceFlags = _.mapObject(this._resourceFlags.data, item => _.mapObject(item, (val, key) => {
+        this._resourceFlags = new Dictionary(_.mapObject(payload.resourceFlags, item => _.mapObject(item, (val, key) => {
 
             if(key == 'value'){
-                return val.data;
+                return new Collection(val);
             }
 
             return val;
-        }));
+        })));
     }
 
     public execute(query:Query<any>):ng.IPromise<DataSourceResponseInterface> {
@@ -274,8 +274,90 @@ export default class MemoryDataSource implements DataSourceInterface {
 
     protected _executeInGraph(query:Query<any>): DataSourceResponseInterface {
 
-        // TODO
-        return null;
+        const resourceName = query.getFrom();
+        const resource = this._dataService.getResource(resourceName);
+        const primaryKey = resource.getModel().primaryKey();
+
+        var data = this._graph.get([query.getFrom()]);
+
+        const offset = query.getOffset();
+        const limit = query.getLimit();
+        const sorters = query.getSorters();
+        const conditions = query.getConditions();
+
+        for(const condition of conditions){
+
+            const operator = condition.getOperator();
+            const value = condition.getValue();
+            const field = condition.getField();
+
+            if(operator == ConditionOperator.IS_LIKE) {
+
+                console.log('CONDITION', condition);
+
+                const query = value.replace(/%/g, '').toLowerCase();
+                const startWith = value.slice(-1) == '%';
+                const endWith = value.substring(0, 1) == '%';
+
+                data = data.filter(item => {
+
+                    var fieldValue = item[field];
+                    if(fieldValue === null){
+                        return false;
+                    }
+
+                    fieldValue = fieldValue.toLowerCase();
+
+                    var result = false;
+
+                    if(startWith && endWith){
+
+                        // Middle
+                        result = fieldValue.indexOf(query) !== -1;
+                    }
+                    else if(startWith){
+
+                        result = fieldValue.indexOf(query) === 0;
+                    }
+                    else if(endWith){
+
+                        result = fieldValue.indexOf(query) === fieldValue.length-2;
+                    }
+
+                    if(result){
+                        console.log('JAA', item);
+                    }
+
+                    return result;
+                });
+
+                console.log('DATA', data);
+            }
+        }
+
+        for(const sorter of sorters) {
+
+            data = _.sortBy(data, sorter.getField());
+
+            if (sorter.getDirection() == SortDirections.DESCENDING) {
+                data.reverse();
+            }
+        }
+
+        const referenceList = new DynamicList<Reference>(_.map(data, (itemData:any) => {
+
+            return new Reference(resourceName, itemData[primaryKey]);
+        }));
+
+        const references = referenceList.getRange(offset, limit);
+
+        return {
+            meta: {
+                total: data.length
+            },
+            graph: this._graph.getGraphForReferences(references),
+            references: _.clone(references)
+        };
     }
 
     protected _validateInclude(items: any[], includeParts: string[]): boolean {
@@ -382,7 +464,7 @@ export default class MemoryDataSource implements DataSourceInterface {
 
     protected _setResourceFlag(resourceName:string, flag:ResourceFlag) {
 
-        console.log('resourceName', resourceName, 'flag', flag);
+        this.logger.log(`Setting flag ${flag} for resource ${resourceName}`);
 
         var flags = this._resourceFlags.get(resourceName);
 
