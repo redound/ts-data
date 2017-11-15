@@ -9,6 +9,7 @@ import Logger from "ts-core/lib/Logger/Logger";
 import {DataSourceResponseInterface} from "../DataService/DataSourceResponseInterface";
 import * as _ from "underscore";
 import Collection from "ts-core/lib/Data/Collection";
+import {lang} from "moment";
 
 export interface QueryResultInterface {
     query:Query<any>,
@@ -22,6 +23,8 @@ export enum ResourceFlag {
 
 export default class MemoryDataSource implements DataSourceInterface {
 
+    public static PERSISTENCE_KEY = "MemoryDataSourceData";
+
     public static QUERY_SERIALIZE_FIELDS = ["from", "conditions", "sorters"];
     public static IDENTIFIER = "memory";
 
@@ -31,8 +34,14 @@ export default class MemoryDataSource implements DataSourceInterface {
     protected _resourceFlags:Dictionary<string, Collection<ResourceFlag>> = new Dictionary<string, Collection<ResourceFlag>>();
 
     public constructor(protected $q:ng.IQService,
-                       protected logger?) {
+                       protected logger?,
+                        protected persist = false) {
+
         this.logger = (this.logger || new Logger()).child('MemoryDataSource');
+
+        if(this.persist){
+            this.loadFromPersistence();
+        }
     }
 
     public getIdentifier():string {
@@ -45,6 +54,109 @@ export default class MemoryDataSource implements DataSourceInterface {
 
     public getDataService():DataService {
         return this._dataService;
+    }
+
+    public saveToPersistence(){
+
+        this.logger.log('Saving tot persistence');
+
+        const queryResultMap = _.mapObject(this._queryResultMap.data, item => _.mapObject(item, (val, key) => {
+
+            if(key == 'value'){
+
+                return _.mapObject(val.data, valueItem => _.mapObject(valueItem, (val2, key2) => {
+
+                    if(key2 == 'value'){
+
+                        return _.mapObject(val2, (val3, key3) => {
+
+                            if(key3 == 'query'){
+                                return val3.toObject();
+                            }
+                            else if(key3 == 'references'){
+                                return val3.data;
+                            }
+
+                            return val3;
+                        });
+                    }
+
+                    return val2;
+                }));
+            }
+
+            return val;
+        }));
+
+        const resourceFlags = _.mapObject(this._resourceFlags.data, item => _.mapObject(item, (val, key) => {
+
+            if(key == 'value'){
+                return val.data;
+            }
+
+            return val;
+        }));
+
+        const payload = {
+            data: this._graph.getData(),
+            queryResultMap: queryResultMap,
+            resourceFlags: resourceFlags
+        };
+
+        console.log('PAYLOAD', payload);
+
+        window.localStorage.setItem(MemoryDataSource.PERSISTENCE_KEY, JSON.stringify(payload));
+    }
+
+    public loadFromPersistence(){
+
+        const payloadJSON = window.localStorage.getItem(MemoryDataSource.PERSISTENCE_KEY);
+        const payload = payloadJSON ? JSON.parse(payloadJSON) : null;
+
+        if(!payload){
+            return;
+        }
+
+        this.logger.log('Loading from persistence', payload);
+
+        this._graph.setData(payload.data);
+
+        this._queryResultMap = new Dictionary(_.mapObject(payload.queryResultMap, item => _.mapObject(item, (val, key) => {
+
+            if(key == 'value'){
+
+                return new Dictionary(_.mapObject(val, valueItem => _.mapObject(valueItem, (val2, key2) => {
+
+                    if(key2 == 'value'){
+
+                        return _.mapObject(val2, (val3, key3) => {
+
+                            if(key3 == 'query'){
+                                return Query.fromObject(val3);
+                            }
+                            else if(key3 == 'references'){
+                                return new DynamicList(val3);
+                            }
+
+                            return val3;
+                        });
+                    }
+
+                    return val2;
+                })));
+            }
+
+            return val;
+        })));
+
+        this._resourceFlags = _.mapObject(this._resourceFlags.data, item => _.mapObject(item, (val, key) => {
+
+            if(key == 'value'){
+                return val.data;
+            }
+
+            return val;
+        }));
     }
 
     public execute(query:Query<any>):ng.IPromise<DataSourceResponseInterface> {
@@ -250,6 +362,10 @@ export default class MemoryDataSource implements DataSourceInterface {
             this._queryResultMap.set(query.getFrom(), resultMap);
         }
 
+        if(this.persist) {
+            this.saveToPersistence();
+        }
+
         return this.$q.when();
     }
 
@@ -276,6 +392,10 @@ export default class MemoryDataSource implements DataSourceInterface {
         }
 
         flags.add(flag);
+
+        if(this.persist) {
+            this.saveToPersistence();
+        }
     }
 
     protected _getResponseResources(response:DataSourceResponseInterface):Collection<string> {
@@ -299,6 +419,10 @@ export default class MemoryDataSource implements DataSourceInterface {
                 this._queryResultMap.remove(resourceName);
             }
         });
+
+        if(this.persist) {
+            this.saveToPersistence();
+        }
     }
 
     public notifyCreate(response:DataSourceResponseInterface):ng.IPromise<void> {
@@ -307,6 +431,10 @@ export default class MemoryDataSource implements DataSourceInterface {
 
         this._graph.merge(response.graph);
         this._clearCachesForIncomingResponse(response);
+
+        if(this.persist) {
+            this.saveToPersistence();
+        }
 
         return this.$q.when();
     }
@@ -317,6 +445,10 @@ export default class MemoryDataSource implements DataSourceInterface {
 
         this._graph.merge(response.graph);
         this._clearCachesForIncomingResponse(response);
+
+        if(this.persist) {
+            this.saveToPersistence();
+        }
 
         return this.$q.when();
     }
@@ -331,6 +463,10 @@ export default class MemoryDataSource implements DataSourceInterface {
         });
 
         this._clearCachesForIncomingResponse(response);
+
+        if(this.persist) {
+            this.saveToPersistence();
+        }
 
         return this.$q.when();
     }
@@ -365,6 +501,10 @@ export default class MemoryDataSource implements DataSourceInterface {
             // this.logger.info('Cleared all');
         }
 
+        if(this.persist) {
+            this.saveToPersistence();
+        }
+
         return this.$q.when();
     }
 
@@ -378,6 +518,10 @@ export default class MemoryDataSource implements DataSourceInterface {
         }
 
         this.logger.log('Cleared query', query);
+
+        if(this.persist) {
+            this.saveToPersistence();
+        }
 
         return this.$q.when();
     }
