@@ -4,7 +4,7 @@ import {QueryExecutorInterface} from "./QueryExecutorInterface";
 import {DataServiceResponseInterface} from "../DataService/DataService";
 import * as _ from "underscore";
 import Dictionary from "ts-core/lib/Data/Dictionary";
-import {ConditionOperator, ConditionType} from "../Query/Condition";
+import {ConditionOperator, ConditionType} from "./Condition";
 import {SortDirections} from "./Sorter";
 
 export default class Query<T> {
@@ -274,7 +274,7 @@ export default class Query<T> {
 
     public multipleOptions(options: any):Query<T> {
 
-        _.each(options, (value, key) => {
+        _.each(options, (value, key: string) => {
             this._options.set(key, value);
         });
 
