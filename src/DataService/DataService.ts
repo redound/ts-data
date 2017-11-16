@@ -180,6 +180,13 @@ export default class DataService implements QueryExecutorInterface {
         });
     }
 
+    public markComplete(resourceName?: string): ng.IPromise<void> {
+
+        return this._callInSources((source:DataSourceInterface) => {
+            return source.markComplete(resourceName);
+        });
+    }
+
     protected _createModels(response:DataSourceResponseInterface):ModelList<any> {
 
         var graph = response.graph;

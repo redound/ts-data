@@ -221,12 +221,6 @@ export default class MemoryDataSource implements DataSourceInterface {
                 return include.split('.');
             });
 
-            var resourceData = [];
-
-            _.each(response.references, (ref: Reference) => {
-                resourceData.push(response.graph.get(ref.value));
-            });
-
             var includesValid = true;
 
             _.each(includeParts, (include) => {
@@ -235,7 +229,7 @@ export default class MemoryDataSource implements DataSourceInterface {
                     return;
                 }
 
-                if(!this._validateInclude(resourceData, include)){
+                if(!this._validateAndFixInclude(response.graph, response.references, include)){
 
                     includesValid = false;
                 }
@@ -409,37 +403,78 @@ export default class MemoryDataSource implements DataSourceInterface {
         };
     }
 
-    protected _validateInclude(items: any[], includeParts: string[]): boolean {
+    protected _validateAndFixInclude(graph: Graph, references: Reference[], includeParts: string[]): boolean {
 
         var valid = true;
 
-        _.each(items, (item) => {
+        for(const reference of references){
 
-            if(!valid){
-                return;
-            }
+            const resourceName = reference.value[0];
+
+            const item = graph.getValue(reference.value);
 
             var part = includeParts[0];
             var nextParts = includeParts.length > 1 ? includeParts.slice(1) : [];
 
             var val = item[part];
-            if(val == null || val == undefined || (!_.isObject(val) && !_.isArray(val))){
+            var includeValid = false;
+
+            if(!val){
+
+                // Missing include, trying to fix
+                const resource = this._dataService.getResource(resourceName);
+                const resourceModel = resource.getModel();
+
+                const referencesInfo = resourceModel.references ? resourceModel.references() : null;
+                const currentReferenceInfo = referencesInfo ? referencesInfo[part] : null;
+
+                if(currentReferenceInfo && item[currentReferenceInfo.field]) {
+
+                    const foreignId = item[currentReferenceInfo.field];
+                    const foreignResourceName = currentReferenceInfo.resource;
+
+                    this.logger.log(`Missing include ${part}, trying to fix with key ${currentReferenceInfo.field} ${foreignId} in resource ${foreignResourceName}`);
+
+                    if(this._graph.hasItem(foreignResourceName, foreignId)){
+
+                        this.logger.log(`Found include ${part} ${foreignId} in graph`);
+
+                        const foreignGraph = this._graph.getGraphForPath([foreignResourceName, foreignId]);
+                        graph.merge(foreignGraph);
+
+                        item[part] = new Reference(foreignResourceName, foreignId);
+
+                        includeValid = true;
+                    }
+                    else {
+
+                        this.logger.log(`Include ${part} ${foreignId} not found in graph`);
+                    }
+                }
+            }
+            else {
+
+                includeValid = true;
+            }
+
+            if(!includeValid){
 
                 this.logger.log('Missing include', part);
                 valid = false;
             }
-            else {
+            else if(nextParts.length > 0){
 
-                if(nextParts.length > 0){
+                var nextItems = _.isArray(val) ? val : [val];
 
-                    var nextItems = _.isArray(val) ? val : [val];
-
-                    if(!this._validateInclude(nextItems, nextParts)){
-                        valid = false;
-                    }
+                if(!this._validateAndFixInclude(graph, nextItems, nextParts)){
+                    valid = false;
                 }
             }
-        });
+
+            if(!valid){
+                break;
+            }
+        }
 
         return valid;
     }
@@ -652,6 +687,23 @@ export default class MemoryDataSource implements DataSourceInterface {
 
         if(this.persist) {
             this.saveToPersistence();
+        }
+
+        return this.$q.when();
+    }
+
+    public markComplete(resourceName?: string):ng.IPromise<void> {
+
+        if(resourceName) {
+
+            this._setResourceFlag(resourceName, ResourceFlag.DATA_COMPLETE);
+        }
+        else {
+
+            for(const resourceItemName of this._dataService.getResources().keys()){
+
+                this._setResourceFlag(resourceItemName, ResourceFlag.DATA_COMPLETE);
+            }
         }
 
         return this.$q.when();

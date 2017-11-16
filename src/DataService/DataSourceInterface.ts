@@ -21,4 +21,6 @@ export interface DataSourceInterface {
 
     invalidate(resourceName?:string, resourceId?: any):ng.IPromise<void>;
     invalidateQuery(query:Query<any>):ng.IPromise<void>;
+
+    markComplete(resourceName?: string):ng.IPromise<void>;
 }
