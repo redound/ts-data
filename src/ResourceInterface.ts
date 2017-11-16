@@ -1,4 +1,4 @@
-import {ModelInterface} from "ts-core/lib/Data/Model";
+import {ModelInterface} from "ts-core/Data/Model";
 import Transformer from "./Api/Transformer";
 
 export interface ResourceInterface {

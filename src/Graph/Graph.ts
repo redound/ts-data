@@ -1,6 +1,6 @@
 import Reference from "./Reference";
 import * as _ from "underscore";
-import Dictionary from "ts-core/lib/Data/Dictionary";
+import Dictionary from "ts-core/Data/Dictionary";
 
 export default class Graph {
 

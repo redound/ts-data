@@ -1,10 +1,10 @@
 import {DataSourceResponseInterface} from "../DataService/DataSourceResponseInterface";
 import Resource from "../Resource";
 import {SerializerInterface} from "../Api/SerializerInterface";
-import Dictionary from "ts-core/lib/Data/Dictionary";
+import Dictionary from "ts-core/Data/Dictionary";
 import Reference from "../Graph/Reference";
 import Graph from "../Graph/Graph";
-import Exception from "ts-core/lib/Exceptions/Exception";
+import Exception from "ts-core/Exceptions/Exception";
 import * as _ from "underscore";
 
 export default class JsonApiSerializer implements SerializerInterface {

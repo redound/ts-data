@@ -1,14 +1,14 @@
 import Query from "../Query/Query";
-import DynamicList from "ts-core/lib/Data/DynamicList";
+import DynamicList from "ts-core/Data/DynamicList";
 import Reference from "../Graph/Reference";
 import {DataSourceInterface} from "../DataService/DataSourceInterface";
 import DataService from "../DataService/DataService";
 import Graph from "../Graph/Graph";
-import Dictionary, {DictionaryDataInterface} from "ts-core/lib/Data/Dictionary";
-import Logger from "ts-core/lib/Logger/Logger";
+import Dictionary, {DictionaryDataInterface} from "ts-core/Data/Dictionary";
+import Logger from "ts-core/Logger/Logger";
 import {DataSourceResponseInterface} from "../DataService/DataSourceResponseInterface";
 import * as _ from "underscore";
-import Collection from "ts-core/lib/Data/Collection";
+import Collection from "ts-core/Data/Collection";
 import {lang} from "moment";
 import {SortDirections} from "ts-data/Query/Sorter";
 import {ConditionOperator} from "../ts-data";
@@ -399,6 +399,14 @@ export default class MemoryDataSource implements DataSourceInterface {
         }));
 
         const references = referenceList.getRange(offset, limit);
+
+        console.log(referenceList, references, offset, limit, {
+            meta: {
+                total: data.length
+            },
+            graph: this._graph.getGraphForReferences(references),
+            references: _.clone(references)
+        });
 
         return {
             meta: {

@@ -1,10 +1,7 @@
-import Model from "ts-core/lib/Data/Model";
-import Collection from "ts-core/lib/Data/Collection";
+import Model from "ts-core/Data/Model";
+import Collection from "ts-core/Data/Collection";
 import DataService, {DataServiceResponseInterface} from "../DataService/DataService";
-import Exception from "ts-core/lib/Exceptions/Exception";
-import {MessageInterface} from "ts-validate/lib/MessageInterface";
-import Message from "ts-validate/lib/Message";
-import Validation from "ts-validate/lib/Validation";
+import Exception from "ts-core/Exceptions/Exception";
 import * as _ from "underscore";
 
 export enum ActiveModelFlag {
@@ -22,28 +19,6 @@ export default class ActiveModel extends Model {
     protected _resourceName:string;
 
     protected _savedData:any;
-
-    // TODO Update TSValidate
-    protected _errorMessages:Collection<MessageInterface> = new Collection<MessageInterface>();
-
-    protected validate(validation:Validation):Collection<MessageInterface> {
-
-        return this._errorMessages = validation.validate(null, this);
-    }
-
-    public validationHasFailed():boolean {
-
-        if (_.isArray(this._errorMessages)) {
-            return this._errorMessages.count() > 0;
-        }
-
-        return false;
-    }
-
-    public getMessages() {
-
-        return this._errorMessages;
-    }
 
     public activate(dataService:DataService, resourceName:string) {
         this._dataService = dataService;
@@ -179,33 +154,6 @@ export default class ActiveModel extends Model {
         }
 
         return !this.equals(this._savedData);
-    }
-
-    public isValid(field?:string) {
-
-        if (this['validation']) {
-            var messages:Collection<Message> = this['validation']();
-
-            var valid = true;
-
-            if (field) {
-
-                messages.each(message => {
-
-                    if (message.getField() === field) {
-                        valid = false;
-                    }
-                });
-
-                return valid;
-
-            } else {
-
-                return !!messages.count();
-            }
-        }
-
-        return true;
     }
 
     public getResourceIdentifier():string {

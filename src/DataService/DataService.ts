@@ -1,18 +1,18 @@
 import {DataSourceResponseInterface} from "./DataSourceResponseInterface";
 import {DataSourceInterface} from "./DataSourceInterface";
 import {QueryExecutorInterface} from "../Query/QueryExecutorInterface";
-import List from "ts-core/lib/Data/List";
+import List from "ts-core/Data/List";
 import {ResourceInterface} from "../ResourceInterface";
 import ResourceDelegate from "../ResourceDelegate";
-import Model from "ts-core/lib/Data/Model";
+import Model from "ts-core/Data/Model";
 import Resource from "../Resource";
 import DataServiceException from "./DataServiceException";
-import Exception from "ts-core/lib/Exceptions/Exception";
+import Exception from "ts-core/Exceptions/Exception";
 import Query from "../Query/Query";
-import ModelList from "ts-core/lib/Data/ModelList";
+import ModelList from "ts-core/Data/ModelList";
 import ActiveModel from "../Model/ActiveModel";
 import * as _ from "underscore";
-import Dictionary from "ts-core/lib/Data/Dictionary";
+import Dictionary from "ts-core/Data/Dictionary";
 import Reference from "../Graph/Reference";
 
 export interface DataSourceExecutionResultInterface {

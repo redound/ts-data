@@ -3,7 +3,7 @@ import Sorter from "./Sorter";
 import {QueryExecutorInterface} from "./QueryExecutorInterface";
 import {DataServiceResponseInterface} from "../DataService/DataService";
 import * as _ from "underscore";
-import Dictionary from "ts-core/lib/Data/Dictionary";
+import Dictionary from "ts-core/Data/Dictionary";
 import {ConditionOperator, ConditionType} from "./Condition";
 import {SortDirections} from "./Sorter";
 

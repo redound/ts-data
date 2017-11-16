@@ -1,4 +1,4 @@
-import Exception from "ts-core/lib/Exceptions/Exception";
+import Exception from "ts-core/Exceptions/Exception";
 import * as _ from "underscore";
 
 export enum ConditionType {

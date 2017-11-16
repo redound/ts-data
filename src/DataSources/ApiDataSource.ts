@@ -4,9 +4,9 @@ import DataService from "../DataService/DataService";
 import Query from "../Query/Query";
 import ApiService from "../Api/ApiService";
 import {SerializerInterface} from "../Api/SerializerInterface";
-import Logger from "ts-core/lib/Logger/Logger";
+import Logger from "ts-core/Logger/Logger";
 import {DataSourceResponseInterface} from "../DataService/DataSourceResponseInterface";
-import Exception from "ts-core/lib/Exceptions/Exception";
+import Exception from "ts-core/Exceptions/Exception";
 
 export default class ApiDataSource implements DataSourceInterface, QueryExecutorInterface {
 

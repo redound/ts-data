@@ -1,9 +1,9 @@
-import Dictionary from "ts-core/lib/Data/Dictionary";
+import Dictionary from "ts-core/Data/Dictionary";
 import Resource from "../Resource";
 import {SerializerInterface} from "../Api/SerializerInterface";
 import {DataSourceResponseInterface} from "../DataService/DataSourceResponseInterface";
-import Collection from "ts-core/lib/Data/Collection";
-import Exception from "ts-core/lib/Exceptions/Exception";
+import Collection from "ts-core/Data/Collection";
+import Exception from "ts-core/Exceptions/Exception";
 import Reference from "../Graph/Reference";
 import Graph from "../Graph/Graph";
 import * as _ from "underscore";

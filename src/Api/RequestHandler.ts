@@ -1,7 +1,7 @@
 import {QueryExecutorInterface} from "../Query/QueryExecutorInterface";
 import ApiService from "./ApiService";
 import {RequestHandlerPluginInterface} from "./RequestHandlerPluginInterface";
-import List from "ts-core/lib/Data/List";
+import List from "ts-core/Data/List";
 import {default as HttpService} from "../Http/HttpService";
 import RequestOptions from "../Http/RequestOptions";
 import Query from "../Query/Query";

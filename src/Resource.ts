@@ -1,5 +1,5 @@
-import Collection from "ts-core/lib/Data/Collection";
-import {ModelInterface} from "ts-core/lib/Data/Model";
+import Collection from "ts-core/Data/Collection";
+import {ModelInterface} from "ts-core/Data/Model";
 import RequestHandler from "./Api/RequestHandler";
 import {TransformerInterface} from "./Api/Transformer";
 

@@ -1,5 +1,5 @@
-import Dictionary from "ts-core/lib/Data/Dictionary";
-import Exception from "ts-core/lib/Exceptions/Exception";
+import Dictionary from "ts-core/Data/Dictionary";
+import Exception from "ts-core/Exceptions/Exception";
 
 export default class DataServiceException extends Exception
 {
