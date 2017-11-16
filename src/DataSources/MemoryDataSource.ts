@@ -4,7 +4,7 @@ import Reference from "../Graph/Reference";
 import {DataSourceInterface} from "../DataService/DataSourceInterface";
 import DataService from "../DataService/DataService";
 import Graph from "../Graph/Graph";
-import Dictionary from "ts-core/lib/Data/Dictionary";
+import Dictionary, {DictionaryDataInterface} from "ts-core/lib/Data/Dictionary";
 import Logger from "ts-core/lib/Logger/Logger";
 import {DataSourceResponseInterface} from "../DataService/DataSourceResponseInterface";
 import * as _ from "underscore";
@@ -121,11 +121,11 @@ export default class MemoryDataSource implements DataSourceInterface {
 
         this._graph.setData(payload.data);
 
-        this._queryResultMap = new Dictionary(_.mapObject(payload.queryResultMap, item => _.mapObject(item, (val, key) => {
+        this._queryResultMap = new Dictionary<string, Dictionary<string, QueryResultInterface>>(<DictionaryDataInterface>_.mapObject(payload.queryResultMap, item => _.mapObject(item, (val, key) => {
 
             if(key == 'value'){
 
-                return new Dictionary(_.mapObject(val, valueItem => _.mapObject(valueItem, (val2, key2) => {
+                return new Dictionary(<DictionaryDataInterface>_.mapObject(val, valueItem => _.mapObject(valueItem, (val2, key2) => {
 
                     if(key2 == 'value'){
 
@@ -149,7 +149,7 @@ export default class MemoryDataSource implements DataSourceInterface {
             return val;
         })));
 
-        this._resourceFlags = new Dictionary(_.mapObject(payload.resourceFlags, item => _.mapObject(item, (val, key) => {
+        this._resourceFlags = new Dictionary<string, Collection<ResourceFlag>>(<DictionaryDataInterface>_.mapObject(payload.resourceFlags, item => _.mapObject(item, (val, key) => {
 
             if(key == 'value'){
                 return new Collection(val);
