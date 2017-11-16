@@ -400,14 +400,6 @@ export default class MemoryDataSource implements DataSourceInterface {
 
         const references = referenceList.getRange(offset, limit);
 
-        console.log(referenceList, references, offset, limit, {
-            meta: {
-                total: data.length
-            },
-            graph: this._graph.getGraphForReferences(references),
-            references: _.clone(references)
-        });
-
         return {
             meta: {
                 total: data.length
