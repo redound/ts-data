@@ -12,6 +12,7 @@ import Collection from "ts-core/lib/Data/Collection";
 import {lang} from "moment";
 import {SortDirections} from "ts-data/Query/Sorter";
 import {ConditionOperator} from "../ts-data";
+import {ConditionType} from "ts-data/Query/Condition";
 
 export interface QueryResultInterface {
     query:Query<any>,
@@ -285,21 +286,52 @@ export default class MemoryDataSource implements DataSourceInterface {
         const sorters = query.getSorters();
         const conditions = query.getConditions();
 
+
+        // Conditions
+        var orConditionResults = [];
+        var andConditionResults = [];
+
         for(const condition of conditions){
 
             const operator = condition.getOperator();
             const value = condition.getValue();
             const field = condition.getField();
 
-            if(operator == ConditionOperator.IS_LIKE) {
+            var filteredData = [];
 
-                console.log('CONDITION', condition);
+            if(operator == ConditionOperator.IS_EQUAL) {
+
+                filteredData = data.filter(item => {
+
+                    var fieldValue = item[field];
+                    if (fieldValue === null) {
+                        return false;
+                    }
+
+                    return fieldValue == value;
+                });
+            }
+            else if(operator == ConditionOperator.CONTAINS || operator == ConditionOperator.NOT_CONTAINS) {
+
+                filteredData = data.filter(item => {
+
+                    var fieldValue = item[field];
+                    if (fieldValue === null) {
+                        return false;
+                    }
+
+                    const contains = fieldValue.indexOf(value) !== -1;
+
+                    return operator == ConditionOperator.CONTAINS ? contains : !contains;
+                });
+            }
+            else if(operator == ConditionOperator.IS_LIKE) {
 
                 const query = value.replace(/%/g, '').toLowerCase();
                 const startWith = value.slice(-1) == '%';
                 const endWith = value.substring(0, 1) == '%';
 
-                data = data.filter(item => {
+                filteredData = data.filter(item => {
 
                     var fieldValue = item[field];
                     if(fieldValue === null){
@@ -324,17 +356,32 @@ export default class MemoryDataSource implements DataSourceInterface {
                         result = fieldValue.indexOf(query) === fieldValue.length-2;
                     }
 
-                    if(result){
-                        console.log('JAA', item);
-                    }
-
                     return result;
                 });
+            }
 
-                console.log('DATA', data);
+            // TODO: Add other condition operators
+
+            if(condition.getType() == ConditionType.AND){
+                andConditionResults.push(filteredData);
+            }
+            else if(condition.getType() == ConditionType.OR){
+                orConditionResults.push(filteredData);
             }
         }
 
+        if(andConditionResults.length > 0){
+
+            data = _.intersection(...andConditionResults);
+        }
+
+        if(orConditionResults.length > 0){
+
+            data = _.intersection(_.union(...orConditionResults), data);
+        }
+
+
+        // Sorters
         for(const sorter of sorters) {
 
             data = _.sortBy(data, sorter.getField());
@@ -344,6 +391,8 @@ export default class MemoryDataSource implements DataSourceInterface {
             }
         }
 
+
+        // Create response
         const referenceList = new DynamicList<Reference>(_.map(data, (itemData:any) => {
 
             return new Reference(resourceName, itemData[primaryKey]);
