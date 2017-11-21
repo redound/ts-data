@@ -274,12 +274,14 @@ export default class MemoryDataSource implements DataSourceInterface {
         const primaryKey = resource.getModel().primaryKey();
 
         var data = this._graph.get([query.getFrom()]);
+        if(!data){
+            return null;
+        }
 
         const offset = query.getOffset();
         const limit = query.getLimit();
         const sorters = query.getSorters();
         const conditions = query.getConditions();
-
 
         // Conditions
         var orConditionResults = [];
