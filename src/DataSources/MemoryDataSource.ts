@@ -600,6 +600,54 @@ export default class MemoryDataSource implements DataSourceInterface {
         this._graph.merge(response.graph);
         this._clearCachesForIncomingResponse(response);
 
+        // Create (inverse) relationships
+        for(const ref of response.references){
+
+            const resourceName = ref.value[0];
+            const resourceId = ref.value[1];
+
+            const resource = this._dataService.getResource(resourceName);
+            const resourceModel = resource.getModel();
+            const referencesInfo = resourceModel.references ? resourceModel.references() : null;
+
+            if(!referencesInfo){
+                continue;
+            }
+
+            const item = this._graph.getItem(resourceName, resourceId);
+
+            console.log('REFERENCES INFO', resourceName, referencesInfo);
+
+            for(const relationName of Object.keys(referencesInfo)){
+
+                const relationData = referencesInfo[relationName];
+                const referenceValue = item[relationData.field];
+
+                console.log('Relation', relationName, relationData, item, referenceValue);
+                if(_.isArray(referenceValue)){
+
+                    const refs = _.map(referenceValue, redId => new Reference(relationData.resource, redId));
+                    this._graph.set([resourceName, resourceId, relationName], refs);
+                }
+                else {
+
+                    this._graph.set([resourceName, resourceId, relationName], new Reference(relationData.resource, referenceValue));
+                }
+
+                if(relationData.inverse){
+
+                    const inversePath = [relationData.resource, referenceValue, relationData.inverse];
+
+                    const currentInverseValue = this._graph.getValue(inversePath) || [];
+                    currentInverseValue.push(new Reference(resourceName, resourceId));
+
+                    this._graph.set(inversePath, currentInverseValue);
+
+                    console.log('currentInverseValue', relationData, currentInverseValue)
+                }
+            }
+        }
+
         if(this.persist) {
             this.saveToPersistence();
         }

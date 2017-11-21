@@ -29,6 +29,7 @@ export default class DataService implements QueryExecutorInterface {
 
     protected updateFullModel: boolean = false;
     protected updateRelations: boolean = false;
+    protected createRelations: boolean = false;
 
     protected _sources:List<DataSourceInterface> = new List<DataSourceInterface>();
     protected _resources:Dictionary<string, ResourceInterface> = new Dictionary<string, ResourceInterface>();
@@ -236,7 +237,13 @@ export default class DataService implements QueryExecutorInterface {
 
     public createModel(resourceName:string, model:any, data?:any):ng.IPromise<DataServiceResponseInterface<any>> {
 
-        var sendData = data || model.toObject(true);
+        const modelClone = new Model(model.toObject());
+
+        if(!this.createRelations){
+            this._removeRelations(modelClone);
+        }
+
+        var sendData = data || modelClone.toObject(true);
 
         return this._executeCreate(resourceName, sendData).then((response: DataSourceResponseInterface) => {
 
@@ -318,16 +325,7 @@ export default class DataService implements QueryExecutorInterface {
         }
 
         if(!this.updateRelations){
-
-            _.each(_.clone(data), (val, key) => {
-
-                _.each(_.isArray(val) ? val : [val], (valItem) => {
-                    
-                    if (valItem instanceof Model) {
-                        delete data[key];
-                    }
-                });
-            });
+            this._removeRelations(data);
         }
 
         if(_.keys(data).length == 0){
@@ -361,6 +359,12 @@ export default class DataService implements QueryExecutorInterface {
     public setUpdateSendsRelations(relations: boolean): DataService {
 
         this.updateRelations = relations;
+        return this;
+    }
+
+    public setCreateSendsRelations(relations: boolean): DataService {
+
+        this.createRelations = relations;
         return this;
     }
 
@@ -496,6 +500,20 @@ export default class DataService implements QueryExecutorInterface {
         nextSource();
 
         return deferred.promise;
+    }
+
+
+    protected _removeRelations(model){
+
+        _.each(_.clone(model), (val, key) => {
+
+            _.each(_.isArray(val) ? val : [val], (valItem) => {
+
+                if (valItem instanceof Model) {
+                    delete model[key];
+                }
+            });
+        });
     }
 
     /** Model Helpers **/
