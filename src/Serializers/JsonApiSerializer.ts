@@ -56,7 +56,7 @@ export default class JsonApiSerializer implements SerializerInterface {
             var model = resource.getModel();
             var primaryKey = model.primaryKey();
 
-            attributes[primaryKey] = parseInt(resourceId);
+            attributes[primaryKey] = resourceId;
 
             var item = attributes;
 

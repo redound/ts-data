@@ -241,8 +241,12 @@ export default class Graph {
             root = root[part];
 
             if (this._isReference(root)) {
+
                 var optimizedPath = root.value.concat(end);
-                return this._optimizePath(optimizedPath);
+
+                if(!_.isEqual(optimizedPath, path)) {
+                    return this._optimizePath(optimizedPath);
+                }
             }
         }
 

@@ -59,6 +59,15 @@ export default class MemoryDataSource implements DataSourceInterface {
         return this._dataService;
     }
 
+    public setPersist(persist: boolean){
+
+        this.persist = persist;
+
+        if(!persist){
+            window.localStorage.removeItem(MemoryDataSource.PERSISTENCE_KEY);
+        }
+    }
+
     public saveToPersistence(){
 
         this.logger.log('Saving tot persistence');
@@ -162,7 +171,7 @@ export default class MemoryDataSource implements DataSourceInterface {
 
     public execute(query:Query<any>):ng.IPromise<DataSourceResponseInterface> {
 
-        this.logger.log('Executing query', query);
+        this.logger.log('Executing query', query, this._graph);
 
         var response:DataSourceResponseInterface = null;
 
@@ -205,7 +214,7 @@ export default class MemoryDataSource implements DataSourceInterface {
             // Resolve from Graph when data is complete
             if (!response && this._resourceHasFlag(query.getFrom(), ResourceFlag.DATA_COMPLETE)) {
 
-                this.logger.info('Got all data in memory, trying executing in local graph');
+                this.logger.log('Got all data in memory, trying executing in local graph');
 
                 response = this._executeInGraph(query);
                 if(response){
@@ -421,7 +430,7 @@ export default class MemoryDataSource implements DataSourceInterface {
             var val = item[part];
             var includeValid = false;
 
-            if(!val){
+            if(val === undefined){
 
                 // Missing include, trying to fix
                 const resource = this._dataService.getResource(resourceName);
@@ -429,6 +438,8 @@ export default class MemoryDataSource implements DataSourceInterface {
 
                 const referencesInfo = resourceModel.references ? resourceModel.references() : null;
                 const currentReferenceInfo = referencesInfo ? referencesInfo[part] : null;
+
+                console.log('MISSING', reference.value, graph, val, item, part, referencesInfo, currentReferenceInfo);
 
                 if(currentReferenceInfo && item[currentReferenceInfo.field]) {
 
@@ -593,15 +604,10 @@ export default class MemoryDataSource implements DataSourceInterface {
         }
     }
 
-    public notifyCreate(response:DataSourceResponseInterface):ng.IPromise<void> {
-
-        this.logger.info('notifyCreate - response', response);
-
-        this._graph.merge(response.graph);
-        this._clearCachesForIncomingResponse(response);
+    protected _syncRelations(references: Reference[]){
 
         // Create (inverse) relationships
-        for(const ref of response.references){
+        for(const ref of references){
 
             const resourceName = ref.value[0];
             const resourceId = ref.value[1];
@@ -627,10 +633,13 @@ export default class MemoryDataSource implements DataSourceInterface {
                 if(_.isArray(referenceValue)){
 
                     const refs = _.map(referenceValue, redId => new Reference(relationData.resource, redId));
+
+                    console.log('SET 1', [resourceName, resourceId, relationName], refs);
                     this._graph.set([resourceName, resourceId, relationName], refs);
                 }
                 else {
 
+                    console.log('SET 2', [resourceName, resourceId, relationName], new Reference(relationData.resource, referenceValue));
                     this._graph.set([resourceName, resourceId, relationName], new Reference(relationData.resource, referenceValue));
                 }
 
@@ -639,14 +648,32 @@ export default class MemoryDataSource implements DataSourceInterface {
                     const inversePath = [relationData.resource, referenceValue, relationData.inverse];
 
                     const currentInverseValue = this._graph.getValue(inversePath) || [];
-                    currentInverseValue.push(new Reference(resourceName, resourceId));
+                    const currentInverseValueItem = _.find(_.map(currentInverseValue, 'value'), inverseRef => inverseRef[0] == resourceName && inverseRef[1].toString() == resourceId.toString());
 
-                    this._graph.set(inversePath, currentInverseValue);
+                    if(!currentInverseValueItem) {
 
-                    console.log('currentInverseValue', relationData, currentInverseValue)
+                        currentInverseValue.push(new Reference(resourceName, resourceId));
+                        this._graph.set(inversePath, currentInverseValue);
+
+                        console.log('currentInverseValue', relationData, currentInverseValue)
+                    }
+                    else {
+
+                        console.log('skipping found', currentInverseValueItem);
+                    }
                 }
             }
         }
+    }
+
+    public notifyCreate(response:DataSourceResponseInterface):ng.IPromise<void> {
+
+        this.logger.info('notifyCreate - response', response);
+
+        this._graph.merge(response.graph);
+        this._clearCachesForIncomingResponse(response);
+
+        this._syncRelations(response.references);
 
         if(this.persist) {
             this.saveToPersistence();
@@ -661,6 +688,8 @@ export default class MemoryDataSource implements DataSourceInterface {
 
         this._graph.merge(response.graph);
         this._clearCachesForIncomingResponse(response);
+
+        this._syncRelations(response.references);
 
         if(this.persist) {
             this.saveToPersistence();
@@ -695,13 +724,13 @@ export default class MemoryDataSource implements DataSourceInterface {
 
                 // Clear one item
                 this._graph.removeItem(resourceName, resourceId);
-                // this.logger.info('Cleared item', resourceName, resourceId);
+                this.logger.info('Cleared item', resourceName, resourceId);
             }
             else {
 
                 // Clear all from resource
                 this._graph.removeItems(resourceName);
-                // this.logger.info('Cleared resource', resourceName);
+                this.logger.info('Cleared resource', resourceName);
             }
 
             this._queryResultMap.remove(resourceName);
@@ -714,7 +743,7 @@ export default class MemoryDataSource implements DataSourceInterface {
             this._resourceFlags.clear();
             this._queryResultMap.clear();
 
-            // this.logger.info('Cleared all');
+            this.logger.info('Cleared all');
         }
 
         if(this.persist) {
