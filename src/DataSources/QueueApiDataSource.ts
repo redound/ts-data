@@ -9,10 +9,10 @@ import ApiService from "../Api/ApiService";
 import {SerializerInterface} from "../Api/SerializerInterface";
 import Logger from "ts-core/Logger/Logger";
 
-interface MutationOperation {
+export interface MutationOperation {
 
     type: MutationOperationType,
-    resourceName: string,
+    resourceName?: string,
     resourceId?: any,
     data?: any
 }
@@ -20,14 +20,17 @@ interface MutationOperation {
 export enum MutationOperationType {
     CREATE = 1,
     UPDATE,
-    REMOVE
+    REMOVE,
+    CUSTOM
 }
 
 export default class QueueApiDataSource extends ApiDataSource {
 
     public static IDENTIFIER = "queueApi";
+    public static PERSISTENCE_KEY = 'QueueApiDataSourceQueue'
 
     protected _queue: List<MutationOperation> = new List<MutationOperation>();
+    protected _customProcessor: (operation: MutationOperation) => ng.IPromise<any>;
 
     public constructor(protected $q:ng.IQService,
                        protected apiService:ApiService,
@@ -37,11 +40,18 @@ export default class QueueApiDataSource extends ApiDataSource {
 
         super($q, apiService, serializer, logger);
         this.logger = (this.logger || new Logger()).child('QueueApiDataSource');
+
+        this.loadFromPersistence();
     }
 
     public setQueueEnabled(enabled: boolean){
 
         this.queueEnabled = enabled;
+    }
+
+    public setCustomProcessor(processor: (operation: MutationOperation) => ng.IPromise<any>){
+
+        this._customProcessor = processor;
     }
 
     public create(resourceName:string, data:any):ng.IPromise<DataSourceResponseInterface> {
@@ -150,6 +160,10 @@ export default class QueueApiDataSource extends ApiDataSource {
 
             promise = super.remove(queueItem.resourceName, queueItem.resourceId);
         }
+        else if(queueItem.type === MutationOperationType.CUSTOM && this._customProcessor) {
+
+            promise = this._customProcessor(queueItem);
+        }
 
         if(promise){
 
@@ -160,16 +174,38 @@ export default class QueueApiDataSource extends ApiDataSource {
                     this.processNextQueueItem(completeDeferred);
                 }
                 else {
+
+                    this.saveToPersistence();
                     completeDeferred.resolve();
                 }
             });
         }
     }
 
-    protected queue(operation: MutationOperation) {
+    public queue(operation: MutationOperation) {
 
         this.logger.info('Added to queue', operation);
 
         this._queue.add(operation);
+        this.saveToPersistence();
+    }
+
+    protected loadFromPersistence(){
+
+        const payloadJSON = window.localStorage.getItem(QueueApiDataSource.PERSISTENCE_KEY);
+        const payload = payloadJSON ? JSON.parse(payloadJSON) : null;
+
+        if(payload) {
+
+            this.logger.log('Loading queue from persistence');
+            this._queue = new List<MutationOperation>(payload);
+        }
+    }
+
+    protected saveToPersistence(){
+
+        this.logger.log('Saving queue to persistence');
+
+        window.localStorage.setItem(QueueApiDataSource.PERSISTENCE_KEY, JSON.stringify(this._queue.toArray()));
     }
 }

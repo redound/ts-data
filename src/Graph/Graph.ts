@@ -257,11 +257,13 @@ export default class Graph {
 
         var originalPath = path;
 
-        path = this._optimizePath(path);
+        // path = this._optimizePath(path);
 
         if (!path) {
             path = originalPath;
         }
+
+        // console.log('SETTING PATH', path, value);
 
         if (path && path.length) {
 
@@ -272,10 +274,12 @@ export default class Graph {
                 var part = path[i];
 
                 if (root[part] === void 0 && i !== path.length - 1) {
+                    // console.log('CLEAR', root, part);
                     root[part] = {};
                 }
 
                 if (i === path.length - 1) {
+                    // console.log('GO', root, part);
                     root[part] = value;
                 }
 

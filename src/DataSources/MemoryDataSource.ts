@@ -70,7 +70,7 @@ export default class MemoryDataSource implements DataSourceInterface {
 
     public saveToPersistence(){
 
-        this.logger.log('Saving tot persistence');
+        this.logger.log('Saving tot persistence', this._graph.getData());
 
         const queryResultMap = _.mapObject(this._queryResultMap.data, item => _.mapObject(item, (val, key) => {
 
@@ -439,8 +439,6 @@ export default class MemoryDataSource implements DataSourceInterface {
                 const referencesInfo = resourceModel.references ? resourceModel.references() : null;
                 const currentReferenceInfo = referencesInfo ? referencesInfo[part] : null;
 
-                console.log('MISSING', reference.value, graph, val, item, part, referencesInfo, currentReferenceInfo);
-
                 if(currentReferenceInfo && item[currentReferenceInfo.field]) {
 
                     const foreignId = item[currentReferenceInfo.field];
@@ -612,10 +610,7 @@ export default class MemoryDataSource implements DataSourceInterface {
             const resourceName = ref.value[0];
             const resourceId = ref.value[1];
 
-            const resource = this._dataService.getResource(resourceName);
-            const resourceModel = resource.getModel();
-            const referencesInfo = resourceModel.references ? resourceModel.references() : null;
-
+            const referencesInfo = this._getResourceReferencesInfo(resourceName);
             if(!referencesInfo){
                 continue;
             }
@@ -628,42 +623,80 @@ export default class MemoryDataSource implements DataSourceInterface {
 
                 const relationData = referencesInfo[relationName];
                 const referenceValue = item[relationData.field];
+                const hasValue = referenceValue !== undefined && referenceValue !== null;
 
                 console.log('Relation', relationName, relationData, item, referenceValue);
-                if(_.isArray(referenceValue)){
+                if(relationData.many){
 
-                    const refs = _.map(referenceValue, redId => new Reference(relationData.resource, redId));
+                    const refs = _.map(referenceValue || [], redId => new Reference(relationData.resource, redId));
 
                     console.log('SET 1', [resourceName, resourceId, relationName], refs);
                     this._graph.set([resourceName, resourceId, relationName], refs);
                 }
                 else {
 
-                    console.log('SET 2', [resourceName, resourceId, relationName], new Reference(relationData.resource, referenceValue));
-                    this._graph.set([resourceName, resourceId, relationName], new Reference(relationData.resource, referenceValue));
+                    const refValue = hasValue ? new Reference(relationData.resource, referenceValue) : null;
+
+                    console.log('SET 2', [resourceName, resourceId, relationName], refValue);
+                    this._graph.set([resourceName, resourceId, relationName], refValue);
                 }
 
-                if(relationData.inverse){
+                if(hasValue && relationData.inverse){
 
                     const inversePath = [relationData.resource, referenceValue, relationData.inverse];
+                    const currentInverseValue = this._graph.getValue(inversePath);
 
-                    const currentInverseValue = this._graph.getValue(inversePath) || [];
-                    const currentInverseValueItem = _.find(_.map(currentInverseValue, 'value'), inverseRef => inverseRef[0] == resourceName && inverseRef[1].toString() == resourceId.toString());
+                    const relationReferencesInfo = this._getResourceReferencesInfo(relationData.resource);
+                    const inverseRelationInfo = relationReferencesInfo ? relationReferencesInfo[relationData.inverse] : null;
 
-                    if(!currentInverseValueItem) {
+                    if(inverseRelationInfo) {
 
-                        currentInverseValue.push(new Reference(resourceName, resourceId));
-                        this._graph.set(inversePath, currentInverseValue);
+                        const inverseFieldPath = [relationData.resource, referenceValue, inverseRelationInfo.field];
 
-                        console.log('currentInverseValue', relationData, currentInverseValue)
+                        if (inverseRelationInfo.many) {
+
+                            const newInverseValue = currentInverseValue || [];
+                            const currentInverseValueItem = _.find(_.map(newInverseValue, 'value'), inverseRef => inverseRef[0] == resourceName && inverseRef[1].toString() == resourceId.toString());
+
+                            if (!currentInverseValueItem) {
+
+                                currentInverseValue.push(new Reference(resourceName, resourceId));
+                                this._graph.set(inversePath, currentInverseValue);
+                                console.log('Added self to inverse', inversePath, currentInverseValue);
+
+                                const newInverseFieldValue = _.map(currentInverseValue, 'value');
+
+                                this._graph.set(inverseFieldPath, newInverseFieldValue);
+                                console.log('Added self to inverse field', inverseFieldPath, newInverseFieldValue);
+                            }
+                            else {
+
+                                console.log('skipping, found', currentInverseValueItem);
+                            }
+                        }
+                        else {
+
+                            this._graph.set(inversePath, new Reference(resourceName, resourceId));
+                            this._graph.set(inverseFieldPath, resourceId);
+
+                            console.log('Set self to inverse', inversePath, new Reference(resourceName, resourceId))
+                            console.log('Set self to inverse field', inverseFieldPath, resourceId)
+                        }
                     }
                     else {
 
-                        console.log('skipping found', currentInverseValueItem);
+                        this.logger.error(`Invalid inverse ${relationData.inverse} for resource '${resourceName}' relation '${relationName}'`);
                     }
                 }
             }
         }
+    }
+
+    protected _getResourceReferencesInfo(resourceName: string): any {
+
+        const resource = this._dataService.getResource(resourceName);
+        const resourceModel = resource.getModel();
+        return resourceModel.references ? resourceModel.references() : null;
     }
 
     public notifyCreate(response:DataSourceResponseInterface):ng.IPromise<void> {
@@ -686,10 +719,14 @@ export default class MemoryDataSource implements DataSourceInterface {
 
         this.logger.info('notifyUpdate - response', response);
 
+        console.log('VOOR', JSON.stringify(this._graph.getData()['moisture-building']['c5d74b0f-5515-4458-be53-7546f66dca4e']));
+
         this._graph.merge(response.graph);
         this._clearCachesForIncomingResponse(response);
 
         this._syncRelations(response.references);
+
+        console.log('NA', JSON.stringify(this._graph.getData()['moisture-building']['c5d74b0f-5515-4458-be53-7546f66dca4e']));
 
         if(this.persist) {
             this.saveToPersistence();
