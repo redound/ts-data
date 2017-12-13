@@ -615,9 +615,7 @@ export default class MemoryDataSource implements DataSourceInterface {
                 continue;
             }
 
-            const item = this._graph.getItem(resourceName, resourceId);
-
-            console.log('REFERENCES INFO', resourceName, referencesInfo);
+            const item = this._graph.getValue([resourceName, resourceId]);
 
             for(const relationName of Object.keys(referencesInfo)){
 
@@ -625,19 +623,14 @@ export default class MemoryDataSource implements DataSourceInterface {
                 const referenceValue = item[relationData.field];
                 const hasValue = referenceValue !== undefined && referenceValue !== null;
 
-                console.log('Relation', relationName, relationData, item, referenceValue);
                 if(relationData.many){
 
                     const refs = _.map(referenceValue || [], redId => new Reference(relationData.resource, redId));
-
-                    console.log('SET 1', [resourceName, resourceId, relationName], refs);
                     this._graph.set([resourceName, resourceId, relationName], refs);
                 }
                 else {
 
                     const refValue = hasValue ? new Reference(relationData.resource, referenceValue) : null;
-
-                    console.log('SET 2', [resourceName, resourceId, relationName], refValue);
                     this._graph.set([resourceName, resourceId, relationName], refValue);
                 }
 
@@ -662,25 +655,16 @@ export default class MemoryDataSource implements DataSourceInterface {
 
                                 currentInverseValue.push(new Reference(resourceName, resourceId));
                                 this._graph.set(inversePath, currentInverseValue);
-                                console.log('Added self to inverse', inversePath, currentInverseValue);
 
-                                const newInverseFieldValue = _.map(currentInverseValue, 'value');
+                                const newInverseFieldValue = _.map(_.map(currentInverseValue, 'value'), item => item[1]);
 
                                 this._graph.set(inverseFieldPath, newInverseFieldValue);
-                                console.log('Added self to inverse field', inverseFieldPath, newInverseFieldValue);
-                            }
-                            else {
-
-                                console.log('skipping, found', currentInverseValueItem);
                             }
                         }
                         else {
 
                             this._graph.set(inversePath, new Reference(resourceName, resourceId));
                             this._graph.set(inverseFieldPath, resourceId);
-
-                            console.log('Set self to inverse', inversePath, new Reference(resourceName, resourceId))
-                            console.log('Set self to inverse field', inverseFieldPath, resourceId)
                         }
                     }
                     else {
@@ -719,14 +703,10 @@ export default class MemoryDataSource implements DataSourceInterface {
 
         this.logger.info('notifyUpdate - response', response);
 
-        console.log('VOOR', JSON.stringify(this._graph.getData()['moisture-building']['c5d74b0f-5515-4458-be53-7546f66dca4e']));
-
         this._graph.merge(response.graph);
         this._clearCachesForIncomingResponse(response);
 
         this._syncRelations(response.references);
-
-        console.log('NA', JSON.stringify(this._graph.getData()['moisture-building']['c5d74b0f-5515-4458-be53-7546f66dca4e']));
 
         if(this.persist) {
             this.saveToPersistence();

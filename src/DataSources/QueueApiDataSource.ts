@@ -62,7 +62,7 @@ export default class QueueApiDataSource extends ApiDataSource {
 
         const tempId = Random.uuid();
 
-        var completeData = _.clone(data);
+        var completeData = _.deepClone(data);
         completeData.id = tempId;
 
         this.queue({
@@ -72,7 +72,7 @@ export default class QueueApiDataSource extends ApiDataSource {
         });
 
         const graph = new Graph();
-        graph.setItem(resourceName, tempId, completeData);
+        graph.setItem(resourceName, tempId, _.deepClone(completeData));
 
         const response = {
             meta: {},
@@ -93,11 +93,11 @@ export default class QueueApiDataSource extends ApiDataSource {
             type: MutationOperationType.UPDATE,
             resourceName,
             resourceId,
-            data: data
+            data: _.deepClone(data)
         });
 
         const graph = new Graph();
-        graph.setItem(resourceName, resourceId, data);
+        graph.setItem(resourceName, resourceId, _.deepClone(data));
 
         const response = {
             meta: {},
@@ -204,7 +204,7 @@ export default class QueueApiDataSource extends ApiDataSource {
 
     protected saveToPersistence(){
 
-        this.logger.log('Saving queue to persistence');
+        this.logger.log('Saving queue to persistence', this._queue.toArray());
 
         window.localStorage.setItem(QueueApiDataSource.PERSISTENCE_KEY, JSON.stringify(this._queue.toArray()));
     }

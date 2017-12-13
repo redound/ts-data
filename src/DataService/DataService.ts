@@ -226,6 +226,10 @@ export default class DataService implements QueryExecutorInterface {
 
     public create(resourceName:string, data:any):ng.IPromise<DataServiceResponseInterface<any>> {
 
+        if(!this.createRelations){
+            this._removeRelations(data, resourceName);
+        }
+
         return this._executeCreate(resourceName, data).then(response => {
 
             return {
@@ -237,13 +241,17 @@ export default class DataService implements QueryExecutorInterface {
 
     public createModel(resourceName:string, model:any, data?:any):ng.IPromise<DataServiceResponseInterface<any>> {
 
-        const modelClone = new Model(model.toObject());
-
+        const modelData = model.toObject();
         if(!this.createRelations){
-            this._removeRelations(modelClone);
+            this._removeRelations(modelData, resourceName);
         }
 
+        const modelClone = new Model(modelData);
         var sendData = data || modelClone.toObject(true);
+
+        if(!this.createRelations){
+            this._removeRelations(sendData, resourceName);
+        }
 
         return this._executeCreate(resourceName, sendData).then((response: DataSourceResponseInterface) => {
 
@@ -300,6 +308,10 @@ export default class DataService implements QueryExecutorInterface {
 
     public update(resourceName:string, resourceId:any, data:any):ng.IPromise<DataServiceResponseInterface<Model>> {
 
+        if(!this.updateRelations){
+            this._removeRelations(data, resourceName);
+        }
+
         return this._executeUpdate(resourceName, resourceId, data).then(response => {
 
             return {
@@ -325,7 +337,7 @@ export default class DataService implements QueryExecutorInterface {
         }
 
         if(!this.updateRelations){
-            this._removeRelations(data);
+            this._removeRelations(data, resourceName);
         }
 
         if(_.keys(data).length == 0){
@@ -503,8 +515,21 @@ export default class DataService implements QueryExecutorInterface {
     }
 
 
-    protected _removeRelations(model){
+    protected _removeRelations(model, resourceName){
 
+        const resource = this.getResource(resourceName);
+        const resourceModel = resource.getModel();
+        const references = resourceModel.references ? resourceModel.references() : null;
+
+        if(references){
+
+            _.each(Object.keys(references), refName => {
+
+                delete model[refName];
+            });
+        }
+
+        // Remove model instances
         _.each(_.clone(model), (val, key) => {
 
             _.each(_.isArray(val) ? val : [val], (valItem) => {

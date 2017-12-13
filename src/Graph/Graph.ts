@@ -33,7 +33,7 @@ export default class Graph {
             return null;
         }
 
-        var value = this._getValueForPath(path);
+        var value = _.deepClone(this._getValueForPath(path));
 
         // 1. Determine required references
         var references = this._getUniqueReferences(value);
@@ -62,7 +62,7 @@ export default class Graph {
                 return;
             }
 
-            var referenceValue = this._getValueForPath(reference.value);
+            var referenceValue = _.deepClone(this._getValueForPath(reference.value));
 
             if(!referenceValue){
 
@@ -71,7 +71,7 @@ export default class Graph {
             }
 
             // Remove references
-            var parsedValue = _.clone(referenceValue);
+            var parsedValue = _.deepClone(referenceValue);
             _.each(referenceValue, (val, key) => {
 
                 var isReference = this._isReference(val);
@@ -262,8 +262,6 @@ export default class Graph {
         if (!path) {
             path = originalPath;
         }
-
-        // console.log('SETTING PATH', path, value);
 
         if (path && path.length) {
 
