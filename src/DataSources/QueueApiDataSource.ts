@@ -140,7 +140,7 @@ export default class QueueApiDataSource extends ApiDataSource {
         return deferred.promise;
     }
 
-    public processNextQueueItem(completeDeferred: ng.IDeferred<any>){
+    public processNextQueueItem(completeDeferred: ng.IDeferred<any>, errors = []){
 
         const queueItem = this._queue.first();
 
@@ -167,17 +167,31 @@ export default class QueueApiDataSource extends ApiDataSource {
 
         if(promise){
 
-            promise.then(() => {
+            const next = () =>{
 
                 this._queue.remove(queueItem);
                 if(this._queue.count() > 0){
-                    this.processNextQueueItem(completeDeferred);
+                    this.processNextQueueItem(completeDeferred, errors);
                 }
                 else {
 
                     this.saveToPersistence();
-                    completeDeferred.resolve();
+
+                    if(errors.length === 0) {
+                        completeDeferred.resolve();
+                    }
+                    else {
+                        completeDeferred.reject(errors);
+                    }
                 }
+            };
+
+            promise.then(next).catch(e => {
+
+                this.logger.error('Error processing queue item', e);
+
+                errors.push(e);
+                next();
             });
         }
     }
