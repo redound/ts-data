@@ -24,6 +24,8 @@ export enum ResourceFlag {
     DATA_COMPLETE = 1
 }
 
+declare var NativeStorage;
+
 export default class MemoryDataSource implements DataSourceInterface {
 
     public static PERSISTENCE_KEY = "MemoryDataSourceData";
@@ -64,13 +66,19 @@ export default class MemoryDataSource implements DataSourceInterface {
         this.persist = persist;
 
         if(!persist){
-            window.localStorage.removeItem(MemoryDataSource.PERSISTENCE_KEY);
+
+            if(NativeStorage){
+                NativeStorage.remove(MemoryDataSource.PERSISTENCE_KEY);
+            }
+            else {
+                window.localStorage.removeItem(MemoryDataSource.PERSISTENCE_KEY);
+            }
         }
     }
 
     public saveToPersistence(){
 
-        this.logger.log('Saving tot persistence', this._graph.getData());
+        this.logger.log('Saving tot persistence', NativeStorage ? 'native' : 'local');
 
         const queryResultMap = _.mapObject(this._queryResultMap.data, item => _.mapObject(item, (val, key) => {
 
@@ -115,58 +123,82 @@ export default class MemoryDataSource implements DataSourceInterface {
             resourceFlags: resourceFlags
         };
 
-        window.localStorage.setItem(MemoryDataSource.PERSISTENCE_KEY, JSON.stringify(payload));
+        if(NativeStorage){
+
+            NativeStorage.setItem(MemoryDataSource.PERSISTENCE_KEY, payload, () => {
+                this.logger.info('Saved to persistence');
+            }, e => {
+                this.logger.error('Error loading data from persistence', e);
+            });
+        }
+        else {
+            window.localStorage.setItem(MemoryDataSource.PERSISTENCE_KEY, JSON.stringify(payload));
+        }
     }
 
     public loadFromPersistence(){
 
-        const payloadJSON = window.localStorage.getItem(MemoryDataSource.PERSISTENCE_KEY);
-        const payload = payloadJSON ? JSON.parse(payloadJSON) : null;
+        const loadData = (payload) => {
 
-        if(!payload){
-            return;
+            if (!payload) {
+                return;
+            }
+
+            this.logger.log('Loading from persistence', NativeStorage ? 'native' : 'local');
+
+            this._graph.setData(payload.data);
+
+            this._queryResultMap = new Dictionary<string, Dictionary<string, QueryResultInterface>>(<DictionaryDataInterface>_.mapObject(payload.queryResultMap, item => _.mapObject(item, (val, key) => {
+
+                if (key == 'value') {
+
+                    return new Dictionary(<DictionaryDataInterface>_.mapObject(val, valueItem => _.mapObject(valueItem, (val2, key2) => {
+
+                        if (key2 == 'value') {
+
+                            return _.mapObject(val2, (val3, key3) => {
+
+                                if (key3 == 'query') {
+                                    return Query.fromObject(val3);
+                                }
+                                else if (key3 == 'references') {
+                                    return new DynamicList(val3);
+                                }
+
+                                return val3;
+                            });
+                        }
+
+                        return val2;
+                    })));
+                }
+
+                return val;
+            })));
+
+            this._resourceFlags = new Dictionary<string, Collection<ResourceFlag>>(<DictionaryDataInterface>_.mapObject(payload.resourceFlags, item => _.mapObject(item, (val, key) => {
+
+                if (key == 'value') {
+                    return new Collection(val);
+                }
+
+                return val;
+            })));
         }
 
-        this.logger.log('Loading from persistence', payload);
+        if(NativeStorage){
 
-        this._graph.setData(payload.data);
+            NativeStorage.getItem(MemoryDataSource.PERSISTENCE_KEY, loadData, e => {
+                this.logger.error('Error loading data from persistence', e);
+            });
+        }
+        else {
 
-        this._queryResultMap = new Dictionary<string, Dictionary<string, QueryResultInterface>>(<DictionaryDataInterface>_.mapObject(payload.queryResultMap, item => _.mapObject(item, (val, key) => {
+            const payloadJSON = window.localStorage.getItem(MemoryDataSource.PERSISTENCE_KEY);
+            const payload = payloadJSON ? JSON.parse(payloadJSON) : null;
 
-            if(key == 'value'){
-
-                return new Dictionary(<DictionaryDataInterface>_.mapObject(val, valueItem => _.mapObject(valueItem, (val2, key2) => {
-
-                    if(key2 == 'value'){
-
-                        return _.mapObject(val2, (val3, key3) => {
-
-                            if(key3 == 'query'){
-                                return Query.fromObject(val3);
-                            }
-                            else if(key3 == 'references'){
-                                return new DynamicList(val3);
-                            }
-
-                            return val3;
-                        });
-                    }
-
-                    return val2;
-                })));
-            }
-
-            return val;
-        })));
-
-        this._resourceFlags = new Dictionary<string, Collection<ResourceFlag>>(<DictionaryDataInterface>_.mapObject(payload.resourceFlags, item => _.mapObject(item, (val, key) => {
-
-            if(key == 'value'){
-                return new Collection(val);
-            }
-
-            return val;
-        })));
+            loadData(payload);
+        }
     }
 
     public execute(query:Query<any>):ng.IPromise<DataSourceResponseInterface> {
