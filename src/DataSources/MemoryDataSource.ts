@@ -67,7 +67,7 @@ export default class MemoryDataSource implements DataSourceInterface {
 
         if(!persist){
 
-            if(NativeStorage){
+            if(typeof NativeStorage !== 'undefined'){
                 NativeStorage.remove(MemoryDataSource.PERSISTENCE_KEY);
             }
             else {
@@ -78,7 +78,7 @@ export default class MemoryDataSource implements DataSourceInterface {
 
     public saveToPersistence(){
 
-        this.logger.log('Saving tot persistence', NativeStorage ? 'native' : 'local');
+        this.logger.log('Saving tot persistence');
 
         const queryResultMap = _.mapObject(this._queryResultMap.data, item => _.mapObject(item, (val, key) => {
 
@@ -123,7 +123,7 @@ export default class MemoryDataSource implements DataSourceInterface {
             resourceFlags: resourceFlags
         };
 
-        if(NativeStorage){
+        if(typeof NativeStorage !== 'undefined'){
 
             NativeStorage.setItem(MemoryDataSource.PERSISTENCE_KEY, payload, () => {
                 this.logger.info('Saved to persistence');
@@ -144,7 +144,7 @@ export default class MemoryDataSource implements DataSourceInterface {
                 return;
             }
 
-            this.logger.log('Loading from persistence', NativeStorage ? 'native' : 'local');
+            this.logger.log('Loading from persistence');
 
             this._graph.setData(payload.data);
 
@@ -186,7 +186,7 @@ export default class MemoryDataSource implements DataSourceInterface {
             })));
         }
 
-        if(NativeStorage){
+        if(typeof NativeStorage !== 'undefined'){
 
             NativeStorage.getItem(MemoryDataSource.PERSISTENCE_KEY, loadData, e => {
                 this.logger.error('Error loading data from persistence', e);
