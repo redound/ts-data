@@ -545,7 +545,7 @@ export default class MemoryDataSource implements DataSourceInterface {
         var references = _.clone(response.references);
         var offset = query.getOffset() || 0;
 
-        if ((response.meta.total && this._graph.countItems(query.getFrom()) === response.meta.total)
+        if ((response.meta.total && this._graph.countItems(query.getFrom()) === response.meta.total && !query.hasConditions())
             || (!query.hasOffset() && !query.hasLimit() && !query.hasFind() && !query.hasConditions())) {
 
             this._setResourceFlag(query.getFrom(), ResourceFlag.DATA_COMPLETE);
