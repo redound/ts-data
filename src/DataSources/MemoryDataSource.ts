@@ -485,7 +485,9 @@ export default class MemoryDataSource implements DataSourceInterface {
                         const foreignGraph = this._graph.getGraphForPath([foreignResourceName, foreignId]);
                         graph.merge(foreignGraph);
 
-                        item[part] = new Reference(foreignResourceName, foreignId);
+                        const ref = new Reference(foreignResourceName, foreignId);
+
+                        item[part] = currentReferenceInfo.many ? [ref] : ref;
 
                         includeValid = true;
                     }
