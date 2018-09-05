@@ -473,27 +473,39 @@ export default class MemoryDataSource implements DataSourceInterface {
 
                 if(currentReferenceInfo && item[currentReferenceInfo.field]) {
 
-                    const foreignId = item[currentReferenceInfo.field];
-                    const foreignResourceName = currentReferenceInfo.resource;
-
-                    this.logger.log(`Missing include ${part}, trying to fix with key ${currentReferenceInfo.field} ${foreignId} in resource ${foreignResourceName}`);
-
-                    if(this._graph.hasItem(foreignResourceName, foreignId)){
-
-                        this.logger.log(`Found include ${part} ${foreignId} in graph`);
-
-                        const foreignGraph = this._graph.getGraphForPath([foreignResourceName, foreignId]);
-                        graph.merge(foreignGraph);
-
-                        const ref = new Reference(foreignResourceName, foreignId);
-
-                        item[part] = currentReferenceInfo.many ? [ref] : ref;
-
-                        includeValid = true;
+                    var foreignIds = item[currentReferenceInfo.field];
+                    if(!_.isArray(foreignIds)){
+                        foreignIds = [foreignIds];
                     }
-                    else {
 
-                        this.logger.log(`Include ${part} ${foreignId} not found in graph`);
+                    const foreignResourceName = currentReferenceInfo.resource;
+                    var foreignReferences = [];
+
+                    for(const foreignId of foreignIds) {
+
+                        this.logger.log(`Missing include ${part}, trying to fix with key ${currentReferenceInfo.field} ${foreignId} in resource ${foreignResourceName}`);
+
+                        if (this._graph.hasItem(foreignResourceName, foreignId)) {
+
+                            this.logger.log(`Found include ${part} ${foreignId} in graph`);
+
+                            const foreignGraph = this._graph.getGraphForPath([foreignResourceName, foreignId]);
+                            graph.merge(foreignGraph);
+
+                            const ref = new Reference(foreignResourceName, foreignId);
+                            foreignReferences.push(ref);
+                        }
+                        else {
+
+                            this.logger.log(`Include ${part} ${foreignId} not found in graph`);
+                            break;
+                        }
+                    }
+
+                    if(foreignReferences.length == foreignIds.length){
+
+                        item[part] = currentReferenceInfo.many ? foreignReferences : (foreignReferences.length ? foreignReferences[0] : null);
+                        includeValid = true;
                     }
                 }
             }
