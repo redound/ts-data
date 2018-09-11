@@ -263,6 +263,8 @@ export default class Graph {
             path = originalPath;
         }
 
+        // console.log('SET', path, value);
+
         if (path && path.length) {
 
             var root = this._data;
@@ -272,7 +274,6 @@ export default class Graph {
                 var part = path[i];
 
                 if (root[part] === void 0 && i !== path.length - 1) {
-                    // console.log('CLEAR', root, part);
                     root[part] = {};
                 }
 
@@ -371,7 +372,7 @@ export default class Graph {
             _.each(resources, (item, resourceId) => {
         
                 var currentItem = this._getValueForPath([resourceName, resourceId]);
-        
+
                 if (!currentItem) {
                     this.setItem(resourceName, resourceId, item);
                 }
@@ -407,7 +408,7 @@ export default class Graph {
 
     protected _getUniqueReferences(data): Reference[] {
 
-        var donePaths = [];
+        var donePaths = {};
         var references = [];
 
         var callback = reference => {
@@ -415,9 +416,9 @@ export default class Graph {
             var referencePath = reference.value;
             var pathString = referencePath.join(':');
 
-            if(!_.contains(donePaths, pathString)) {
+            if(!donePaths[pathString]) {
 
-                donePaths.push(pathString);
+                donePaths[pathString] = true;
                 references.push(reference);
 
                 var referenceValue = this.getValue(referencePath);
