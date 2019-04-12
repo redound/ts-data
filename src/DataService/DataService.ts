@@ -14,6 +14,7 @@ import ActiveModel from "../Model/ActiveModel";
 import * as _ from "underscore";
 import Dictionary from "ts-core/Data/Dictionary";
 import Reference from "../Graph/Reference";
+import Graph from "../Graph/Graph";
 
 export interface DataSourceExecutionResultInterface {
     response:DataSourceResponseInterface,

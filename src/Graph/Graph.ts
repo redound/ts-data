@@ -25,6 +25,9 @@ export default class Graph {
 
     public get(path?:any[], creationCallback?:any) {
 
+        // console.log('GET', path);
+        var time = new Date().getTime();
+
         this._createdEntitiesCache.clear();
 
         path = this._optimizePath(path);
@@ -34,6 +37,9 @@ export default class Graph {
         }
 
         var value = _.deepClone(this._getValueForPath(path));
+
+        // console.log('Value', value,  new Date().getTime() - time);
+        time = new Date().getTime();
 
         // 1. Determine required references
         var references = this._getUniqueReferences(value);
@@ -52,6 +58,8 @@ export default class Graph {
 
         references = references.concat(rootReferences);
 
+        // console.log('References', new Date().getTime() - time);
+        time = new Date().getTime();
 
         // 2. Create entities
         _.each(references, (reference: Reference) => {
@@ -94,12 +102,18 @@ export default class Graph {
             this._createdEntitiesCache.set(referenceKey, entity);
         });
 
+        // console.log('Entities', new Date().getTime() - time);
+        time = new Date().getTime();
+
 
         // 3. Connect entities
         this._resolveValueRecursive(null, rootReferences, (refPathKey) => {
 
             return this._createdEntitiesCache.get(refPathKey);
         });
+
+        // console.log('Connect', new Date().getTime() - time);
+        time = new Date().getTime();
 
         return path.length == 1 ? rootReferences : _.first(rootReferences);
     }
@@ -321,6 +335,47 @@ export default class Graph {
         return this;
     }
 
+    public removeReferences(reference: Reference, removeCallback=null){
+
+        _.each(this._data, (resources:any, resourceName:string) => {
+
+            _.each(resources, (item) => {
+
+                _.each(item, (value, key) => {
+
+                    if(_.isArray(value)){
+
+                        for(const val of _.clone(value)){
+
+                            if(this._isReference(val)){
+
+                                if(val.value[0] == reference[0] && val.value[1] == reference[1]){
+
+                                    value.splice(value.indexOf(val), 1);
+
+                                    if(removeCallback) {
+                                        removeCallback(resourceName, item, key);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else if(this._isReference(value)){
+
+                        if(value.value[0] == reference[0] && value.value[1] == reference[1]){
+
+                            item[key] = null;
+
+                            if(removeCallback) {
+                                removeCallback(resourceName, item, key);
+                            }
+                        }
+                    }
+                });
+            });
+        });
+    }
+
     public hasItem(resourceName:string, resourceId:any):boolean {
         return this.has([resourceName, resourceId]);
     }
@@ -366,11 +421,11 @@ export default class Graph {
     }
 
     public mergeData(data:any) {
-        
+
         _.each(data, (resources:any, resourceName:string) => {
-        
+
             _.each(resources, (item, resourceId) => {
-        
+
                 var currentItem = this._getValueForPath([resourceName, resourceId]);
 
                 if (!currentItem) {

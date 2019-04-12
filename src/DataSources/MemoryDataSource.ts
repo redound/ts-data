@@ -249,9 +249,16 @@ export default class MemoryDataSource implements DataSourceInterface {
                 this.logger.log('Got all data in memory, trying executing in local graph');
 
                 response = this._executeInGraph(query);
-                if(response){
-                    this.logger.log('Executed query in graph');
+                if(!response){
+
+                    response = {
+                        meta: { total: 0 },
+                        graph: new Graph,
+                        references: []
+                    };
                 }
+
+                this.logger.log('Executed query in graph');
             }
         }
 
@@ -452,6 +459,10 @@ export default class MemoryDataSource implements DataSourceInterface {
 
         for(const reference of references){
 
+            if(!reference){
+                continue;
+            }
+
             const resourceName = reference.value[0];
 
             const item = graph.getValue(reference.value);
@@ -460,6 +471,7 @@ export default class MemoryDataSource implements DataSourceInterface {
             var nextParts = includeParts.length > 1 ? includeParts.slice(1) : [];
 
             var val = item[part];
+
             var includeValid = false;
 
             if(val === undefined){
@@ -766,6 +778,33 @@ export default class MemoryDataSource implements DataSourceInterface {
         this.logger.info('notifyRemove - response', response);
 
         _.each(response.references, (reference) => {
+
+            const referenceId = reference.value[1];
+
+            this._graph.removeReferences(reference.value, (resourceName, item, key) => {
+
+                const resource = this._dataService.getResource(resourceName);
+                const resourceModel = resource.getModel();
+                const resourceReferences = resourceModel.references ? resourceModel.references() : {};
+                const foreignKey = resourceReferences ? resourceReferences[key] : null;
+
+                if(foreignKey && foreignKey.field){
+
+                    const fieldValue = item[foreignKey.field];
+
+                    if(_.isArray(fieldValue)){
+
+                        const itemIndex = fieldValue.indexOf(referenceId);
+                        if(itemIndex >= 0) {
+                            fieldValue.splice(itemIndex, 1);
+                        }
+                    }
+                    else {
+
+                        item[foreignKey.field] = null
+                    }
+                }
+            });
 
             this._graph.unset(reference.value);
         });

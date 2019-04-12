@@ -7,6 +7,9 @@ import {SerializerInterface} from "../Api/SerializerInterface";
 import Logger from "ts-core/Logger/Logger";
 import {DataSourceResponseInterface} from "../DataService/DataSourceResponseInterface";
 import Exception from "ts-core/Exceptions/Exception";
+import Graph from "../Graph/Graph";
+import Reference from "../Graph/Reference";
+import * as _ from "underscore";
 
 export default class ApiDataSource implements DataSourceInterface, QueryExecutorInterface {
 
@@ -43,7 +46,20 @@ export default class ApiDataSource implements DataSourceInterface, QueryExecutor
 
         return this.apiService
             .execute(query)
-            .then(response => this._transformResponse(resourceName, response));
+            .then(response => {
+
+                var transformed = this._transformResponse(resourceName, response);
+
+                var includeParts = _.map(query.getIncludes(), (include) => {
+                    return include.split('.');
+                });
+
+                _.each(includeParts, (include) => {
+                    this._fixIncludes(transformed.graph, transformed.references, include);
+                });
+
+                return transformed;
+            });
     }
 
     public create(resourceName:string, data:any):ng.IPromise<DataSourceResponseInterface> {
@@ -134,5 +150,30 @@ export default class ApiDataSource implements DataSourceInterface, QueryExecutor
     protected _transformResponse(resourceName:string, response:any) {
 
         return this.serializer.deserialize(resourceName, response);
+    }
+
+    protected _fixIncludes(graph: Graph, references: Reference[], includeParts: string[]){
+
+        for (const reference of references){
+
+            const item = graph.getValue(reference.value);
+
+            var part = includeParts[0];
+            var nextParts = includeParts.length > 1 ? includeParts.slice(1) : [];
+
+            var val = item[part];
+
+            if(val === undefined){
+
+                // Include not provided, so value is null
+                item[part] = null;
+            }
+
+            if(nextParts.length > 0 && val){
+
+                var nextItems = _.isArray(val) ? val : [val];
+                this._fixIncludes(graph, nextItems, nextParts)
+            }
+        }
     }
 }

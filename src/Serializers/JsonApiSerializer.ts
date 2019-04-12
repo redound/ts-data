@@ -75,22 +75,19 @@ export default class JsonApiSerializer implements SerializerInterface {
 
                         return new Reference(resourceName, resourceId);
                     });
-
-                    return;
                 }
-
-                if (_.isObject(relationship.data)) {
+                else if (_.isObject(relationship.data)) {
 
                     var ref = relationship.data;
                     var resourceName = ref.type;
                     var resourceId = ref.id;
 
                     item[propertyName] = new Reference(resourceName, resourceId);
-
-                    return;
                 }
+                else {
 
-                item[propertyName] = relationship.data;
+                    item[propertyName] = relationship.data;
+                }
             });
 
             graph.setItem(resourceName, resourceId, item);
